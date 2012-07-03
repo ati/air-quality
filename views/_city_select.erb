@@ -1,0 +1,5 @@
+<select name="city">
+<% @cities.each do |c| %>
+    <option value="<%= c.id %>"><%= c.fullname %></option>
+<% end %>
+</select>

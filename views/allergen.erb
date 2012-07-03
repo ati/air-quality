@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Allergens by city and year</title>
+        <link href="/bootstrap/css/bootstrap.css" rel="stylesheet" />
+        <link href="/bootstrap/css/bootstrap-responsive.css" rel="stylesheet" />
+        <link href="/chosen/chosen.css" rel="stylesheet" />
+        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+        <script type="text/javascript" src="/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/js/js-model-0.11.0.min.js"></script>
+        <!-- script type="text/javascript" src="/bootstrap/js/bootstrap-tab.js"></script -->
+        <script type="text/javascript" src="/chosen/chosen.jquery.min.js"></script>
+        <script type="text/javascript">
+            var graph;
+
+            // years
+            var max_year = <%= @max_year %>;
+            var min_year = <%= @min_year %>;
+            var cur_year = <%= @cur_year  %>;
+
+            // cities
+            var City = Model('city', function(){
+                this.extend({
+                    active_ids: function() {
+                        res = [];
+                        this.each(function() { if (this.attr('is_active')) {res.push(this.attr('id')); }});
+                        return res;
+                    },
+
+                    set_active: function(active_ids) {
+                        this.each(function() { this.attr('is_active', (active_ids.indexOf(this.attr('id') + '') > -1)); });
+                    },
+                });
+            });
+            <% @cities.each do |c| %>
+                new City($.parseJSON('<%= c.to_json %>')).save();
+            <% end %>
+
+            // allergen groups
+            var Agroup = Model('agroup', function() {
+                this.extend({
+                    active_ids: function() {
+                        res = [];
+                        this.each(function() { if (this.attr('is_active')) {res.push(this.attr('id')); }});
+                        return res;
+                    },
+
+                    set_active: function(active_ids) {
+                        this.each(function() { this.attr('is_active', (active_ids.indexOf(this.attr('id') + '') > -1)); });
+                    },
+                });
+            });
+
+            <% @agroups.each do |g| %>
+                new Agroup($.parseJSON('<%= g.to_json %>')).save();
+            <% end %>
+
+
+            function data_url()
+            {
+                var data_url = '/data/cities/' + cur_year;
+                data_url += '?city[]=' + City.active_ids().join('&city[]=');
+                data_url += '&group[]=' + Agroup.active_ids().join('&group[]=');
+                return data_url;
+            }
+
+
+            function update_visibility()
+            {
+                var active_cities = City.active_ids();
+                var active_groups = Agroup.active_ids();
+                var active_pairs = [];
+
+                for (var i = 0; i < active_cities.length; i++ )
+                {
+                    for (var j = 0; j < active_groups.length; j++)
+                    {
+                        active_pairs.push(active_cities[i] + ':' + active_groups[j]);
+                    }
+                }
+            }
+
+
+            jQuery(document).ready(function($) {
+                graph = new Dygraph(
+                    document.getElementById('graphdiv'),
+                    data_url(),
+                    {
+                        rollPeriod: 3,
+                        showRoller: true,
+                        logscale: true,
+                        axisLabelFontSize: 13,
+                        drawGapEdgePoints: true,
+                    }
+                );
+
+
+                $('.year-select').click(function(e) {
+                    e.preventDefault();
+
+                    $('#li_' + cur_year).removeClass('active');
+                    cur_year = $(e.target).data('year');
+                    $('#li_' + cur_year).addClass('active');
+                    graph.updateOptions({file: data_url()})
+                    return false;
+                    });
+
+                $('#cities').chosen().change(function(e) {
+                    City.set_active(($(e.target).val() + '').split(','));
+                    graph.updateOptions({file: data_url()})
+                });
+
+
+                $('.agroup-select').click(function(e) {
+                    e.preventDefault();
+                    var ag = $(e.target).data('agroup');
+                    $('#ag_' + ag).toggleClass('active');
+                    var res = [];
+                    $('.agroup-select').each(function(i,v) {if ($(v).hasClass('active')) res.push($(v).data('agroup') + '')});
+                    Agroup.set_active(res);
+                    update_visibility();
+                    return false;
+                });
+
+                $(".chzn-select").chosen();
+            });
+        </script>
+    </head>
+    <body>
+        <div class="navbar">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a data-target=".nav-collapse" data-toggle="collapse" class="btn btn-navbar">
+                    <span class="icon-bar"/>
+                    <span class="icon-bar"/>
+                    <span class="icon-bar"/>
+                    </a>
+'))')
+                    <a href="#" class="brand">Аллергены</a>
+
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="#">По городам</a></li>
+                            <li><a href="#">По годам</a></li>}
+                        </ul>
+                    </div><!-- /.nav-collapse -->
+                </div>
+            </div><!-- /navbar-inner -->
+        </div><!-- /navbar -->
+  
+        <div class="container">
+            <form name="mf" method="GET" action="/cities">
+                <div class="row well">
+                    <div class="span8 offset2">
+                    <select data-placeholder="Выберите города..." id="cities" multiple="1" name="city[]" class="chzn-select" style="width: 100%">
+                    <% @cities.each do |c| %>
+                        <option value="<%= c.id %>"<% if c.is_active %> selected="1"<% end %>><%= c.fullname %></option>
+                    <% end %>
+                    </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                        <div class="tab-pane active row" id="year">
+                            <div class="span2">
+                            <ul class="nav nav-pills nav-stacked">
+                                <% @agroups.each do |g| %>
+                                    <li data-agroup="<%= g.id %>" id="ag_<%= g.id %>" class="agroup-select<% if g.is_active %> active<% end %>"><a data-agroup="<%= g.id %>" href="#"><%= g.title %></a></li>
+                                <% end %>
+                            </ul>
+                            </div>
+
+                            <div class="span10">
+
+                                <div class="row">
+                                    <div id="graphdiv" style="height: 450px; width: 90%; margin-top: 10px; margin-bottom: 30px;"></div>
+                                <ul class="nav nav-pills offset1">
+                                    <% @years.each do |y| %>
+                                        <li class="year-select <% if @cur_year.to_i == y %>active <% elsif ! params[:year].to_i.between?(@min_year, @max_year) %> disabled<% end %>year-select"><a href="#" data-year="<%= y %>"><%= y %></a></li>
+                                    <% end %>
+                                </ul>
+                                    <%= render :partial => "allergen_checkboxes" %>
+                                </div>
+                            </div>
+                        </div>
+                        
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
