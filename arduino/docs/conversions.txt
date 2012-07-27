@@ -1,0 +1,5 @@
+dylos readings -> count in cubic meter: *28.316846592
+large = > 2.5
+small = <= 2.5
+
+
