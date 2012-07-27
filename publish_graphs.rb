@@ -4,6 +4,10 @@ require 'sequel'
 require './lib/models'
 require 'sinatra/reloader' if development?
 
+# require 'ipgeobase'
+# ip_meta = Ipgeobase.lookup('213.232.243.233')
+# #<Ipgeobase::IpMetaData:0x007fe2bb158790 @city="Москва", @country="RU", @region="Москва", @district="Центральный федеральный округ", @lat=55.755787, @lng=37.617634>"
+
 set :public_folder, 'public'
 set :static, true
 
@@ -21,6 +25,7 @@ end
 
 get '/cities' do
     default_city = 6 #TODO: geoip
+    default_group = 1 #or session?
 
     active_cities = (params[:city] || [default_city]).map{ |i| i.to_i }
     @cities = City.order(:id).all {|c| c.is_active = true if active_cities.index(c.id) }
@@ -32,7 +37,7 @@ get '/cities' do
         @min_year = c.min_year if c.min_year < @min_year
     end
 
-    active_groups = (params[:group]|| []).map{ |i| i.to_i } 
+    active_groups = (params[:group]|| [default_group]).map{ |i| i.to_i } 
     @agroups = Group.order(:id).all {|g| g.is_active = true if active_groups.empty? || active_groups.index(g.id) }
 
     @years = (2001 .. Time.now.year).to_a
@@ -63,8 +68,6 @@ get '/data/cities/:year' do
     end
 
     csv_string = CSV.generate do |csv|
-        csv << ["date"] + (1 .. cities.count*agroups.count).to_a
-
         ts.uniq.each do |ts|
             row = [Time.at(ts).strftime("%Y-%m-%d")]
             mms.each do |c_id, gdata|

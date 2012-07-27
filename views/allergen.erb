@@ -27,6 +27,12 @@
                         return res;
                     },
 
+                    active_names: function() {
+                        res = ['Дата'];
+                        this.each(function() { if (this.attr('is_active')) {res.push(this.attr('fullname')); }});
+                        return res;
+                    },
+
                     set_active: function(active_ids) {
                         this.each(function() { this.attr('is_active', (active_ids.indexOf(this.attr('id') + '') > -1)); });
                     },
@@ -51,10 +57,12 @@
                 });
             });
 
+
             <% @agroups.each do |g| %>
                 new Agroup($.parseJSON('<%= g.to_json %>')).save();
             <% end %>
 
+            var Graph = Model('graph');
 
             function data_url()
             {
@@ -65,61 +73,63 @@
             }
 
 
-            function update_visibility()
-            {
-                var active_cities = City.active_ids();
-                var active_groups = Agroup.active_ids();
-                var active_pairs = [];
-
-                for (var i = 0; i < active_cities.length; i++ )
-                {
-                    for (var j = 0; j < active_groups.length; j++)
-                    {
-                        active_pairs.push(active_cities[i] + ':' + active_groups[j]);
-                    }
-                }
-            }
-
-
             jQuery(document).ready(function($) {
                 graph = new Dygraph(
                     document.getElementById('graphdiv'),
                     data_url(),
                     {
+                        animatedZooms: true,
+                        hideOverlayOnMouseOut: false,
+                        fillGraph: true,
+                        labels: City.active_names(),
                         rollPeriod: 3,
                         showRoller: true,
-                        logscale: true,
+                        clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
                         axisLabelFontSize: 13,
                         drawGapEdgePoints: true,
+                        connectSeparatedPoints: true,
                     }
                 );
+
+                var active_cities = City.active_ids();
+                var active_groups = Agroup.active_ids();
+                var g_index = 0;
+                for (var i = 0; i < active_cities.length; i++ )
+                {
+                    for (var j = 0; j < active_groups.length; j++)
+                    {
+                        new Graph({city_id: active_cities[i], group_id: active_groups[j], g_index: g_index}).save();
+                        g_index += 1;
+                    }
+                }
 
 
                 $('.year-select').click(function(e) {
                     e.preventDefault();
 
-                    $('#li_' + cur_year).removeClass('active');
+                    $('#year_' + cur_year).removeClass('active');
                     cur_year = $(e.target).data('year');
-                    $('#li_' + cur_year).addClass('active');
+                    $('#year_' + cur_year).addClass('active');
                     graph.updateOptions({file: data_url()})
-                    return false;
-                    });
+                });
 
                 $('#cities').chosen().change(function(e) {
                     City.set_active(($(e.target).val() + '').split(','));
-                    graph.updateOptions({file: data_url()})
+                    graph.updateOptions({file: data_url(), labels: City.active_names()})
                 });
 
 
                 $('.agroup-select').click(function(e) {
                     e.preventDefault();
-                    var ag = $(e.target).data('agroup');
-                    $('#ag_' + ag).toggleClass('active');
-                    var res = [];
-                    $('.agroup-select').each(function(i,v) {if ($(v).hasClass('active')) res.push($(v).data('agroup') + '')});
-                    Agroup.set_active(res);
-                    update_visibility();
-                    return false;
+                    var ag = Agroup.active_ids().pop();
+                    var new_ag = $(e.target).data('agroup');
+                    if (ag != new_ag)
+                    {
+                        $('#ag_' + ag).removeClass('active');
+                        Agroup.set_active([''+new_ag]);
+                        graph.updateOptions({file: data_url()});
+                        $('#ag_' + new_ag).addClass('active');
+                    }
                 });
 
                 $(".chzn-select").chosen();
@@ -135,13 +145,12 @@
                     <span class="icon-bar"/>
                     <span class="icon-bar"/>
                     </a>
-'))')
                     <a href="#" class="brand">Аллергены</a>
 
                     <div class="nav-collapse">
                         <ul class="nav">
                             <li class="active"><a href="#">По городам</a></li>
-                            <li><a href="#">По годам</a></li>}
+                            <li><a href="#">По годам</a></li>
                         </ul>
                     </div><!-- /.nav-collapse -->
                 </div>
@@ -176,7 +185,7 @@
                                     <div id="graphdiv" style="height: 450px; width: 90%; margin-top: 10px; margin-bottom: 30px;"></div>
                                 <ul class="nav nav-pills offset1">
                                     <% @years.each do |y| %>
-                                        <li class="year-select <% if @cur_year.to_i == y %>active <% elsif ! params[:year].to_i.between?(@min_year, @max_year) %> disabled<% end %>year-select"><a href="#" data-year="<%= y %>"><%= y %></a></li>
+                                    <li id="year_<%= y %>" class="year-select <% if @cur_year == y %>active<% end %>"><a href="#" data-year="<%= y %>"><%= y %></a></li>
                                     <% end %>
                                 </ul>
                                     <%= render :partial => "allergen_checkboxes" %>
