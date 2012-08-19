@@ -16,7 +16,6 @@ Sensors::Sensors()
   humidity = 0;
   temperature= 0;
   heater_status = LOW;
-  data_counter = 0;
 }
 
 
@@ -28,33 +27,13 @@ boolean Sensors::from_dht11(int t, int h)
 }
 
 
-boolean Sensors::from_dc1100(String s)
+boolean Sensors::from_dc1100(int small, int large)
 {
-    // Serial.println(s);
-    char sensor_chars[16];
-    int comma_pos = s.indexOf(',');
-    if (comma_pos > 0)
-    {
-        s.substring(0, comma_pos+1).toCharArray(sensor_chars, comma_pos+1);
-        dust1 = atoi(sensor_chars);
-        s.substring(comma_pos+1).toCharArray(sensor_chars, s.length() - comma_pos);
-        dust2 = atoi(sensor_chars);
-        data_counter++;
-        return true;
-    }
-    else { return false; }
+  dust1 = small;
+  dust2 = large;
+  return true;
 }
 
-
-boolean Sensors::has_news(unsigned long *counter)
-{
-    if (data_counter > *counter)
-    {
-        *counter = data_counter;
-        return true;
-    }
-    else { return false; }
-}
 
 
 //

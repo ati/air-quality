@@ -32,13 +32,10 @@ public:
     int temperature;
     unsigned char start_counter;
     int heater_status;
-    unsigned long data_counter;
     
     Sensors();
-    String to_json();
-    boolean from_dc1100(String s);
+    boolean from_dc1100(int small, int large);
     boolean from_dht11(int t, int h);
-    boolean has_news(unsigned long *counter);
 };
 #endif
 //
