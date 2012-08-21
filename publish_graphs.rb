@@ -1,9 +1,10 @@
+require 'rubygems'
 require 'sinatra'
 require 'csv'
 require 'json'
 require 'sequel'
 require 'parseconfig'
-require './lib/models'
+require File.dirname(__FILE__) + '/lib/models'
 require 'sinatra/reloader' if development?
 
 # require 'ipgeobase'
@@ -12,7 +13,7 @@ require 'sinatra/reloader' if development?
 
 set :public_folder, 'public'
 set :static, true
-set :config, ParseConfig.new('./db/dust.config')
+set :config, ParseConfig.new(File.dirname(__FILE__) + '/db/dust.config')
 
 get '/' do
     erb :index
