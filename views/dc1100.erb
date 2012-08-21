@@ -1,0 +1,25 @@
+<html><body>
+<table border=0>
+    <tr>
+        <th>Timestamp</th>
+        <th>Dust &lt; 2.5 um</th>
+        <th>Dust &gt; 2.5 um</th>
+        <th>Temperature</th>
+        <th>Humidity</th>
+        <th>Rain counter</th>
+        <th>Heater status</th>
+    </tr>
+
+    <% @data.each do |ds| %>
+    <tr>
+        <td><%= ds.ts_to_s() %></td>
+        <td><%= ds.d1 %></td>
+        <td><%= ds.d2 %></td>
+        <td><%= ds.t1 %></td>
+        <td><%= ds.h1 %></td>
+        <td><%= ds.rc %></td>
+        <td><%= (ds.hs == 0)? 'on' : 'off' %></td>
+    </tr>
+    <% end %>
+</table>
+</body></html>

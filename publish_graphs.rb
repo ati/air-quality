@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'csv'
+require 'json'
 require 'sequel'
+require 'parseconfig'
 require './lib/models'
 require 'sinatra/reloader' if development?
 
@@ -10,6 +12,7 @@ require 'sinatra/reloader' if development?
 
 set :public_folder, 'public'
 set :static, true
+set :config, ParseConfig.new('./db/dust.config')
 
 get '/' do
     erb :index
@@ -82,6 +85,20 @@ get '/data/cities/:year' do
     csv_string
 end
 
+post '/data/dc1100' do
+    protected!
+    Dc1100.insert(JSON.parse(params[:data]).merge({:measured_at => params[:measured_at]}))
+    "ok"
+end
+
+
+get '/data/dc1100' do
+    @data = Dc1100.reverse_order(:measured_at).limit(24*60).all
+    erb :dc1100
+end
+
+
+
 helpers do
   def render(*args)
     if args.first.is_a?(Hash) && args.first.keys.include?(:partial)
@@ -90,5 +107,17 @@ helpers do
       super
     end
   end
-end
 
+  def protected!
+    unless authorized?
+      response['WWW-Authenticate'] = %(Basic realm="Restricted Area")
+      throw(:halt, [401, "Not authorized\n"])
+    end
+  end
+
+  def authorized?
+    @auth ||=  Rack::Auth::Basic::Request.new(request.env)
+    @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == [settings.config['username'], settings.config['password']]
+  end
+
+end

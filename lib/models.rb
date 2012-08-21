@@ -53,3 +53,10 @@ class Measurement < Sequel::Model
         Time.at(measured_at).year
     end
 end
+
+
+class Dc1100 < Sequel::Model
+    def ts_to_s( format = '%Y-%m-%d %H:%M')
+        Time.at(measured_at).strftime(format)
+    end
+end
