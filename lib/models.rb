@@ -60,4 +60,8 @@ class Dc1100 < Sequel::Model
     def ts_to_s( format = '%Y-%m-%d %H:%M')
         Time.at(measured_at + TIME_OFFSET).strftime(format)
     end
+
+    def timerange(from, to)
+        Dc1100.reverse_order(:measured_at).where(:measured_at => from.to_i .. to.to_i)
+    end
 end

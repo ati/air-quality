@@ -1,19 +1,10 @@
-<html>
-    <head>
-        <title></title>
-        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
-    </head>
-    <body>
-        <form name="mf">
+<% content_for :scripts do %>
+    <!-- javascripts -->
+<% end %>
 
-        <div id="graphdiv"></div>
-        <script type="text/javascript">
-            g = new Dygraph(
-                document.getElementById('graphdiv'),
-                '/data/6/2012/1',
-                {}
-            );
-        </script>
-        </form>
-    </body>
-</html>
+<% content_for :stylesheets do %>
+    <!-- css -->
+<% end %>
+
+
+Here we go
