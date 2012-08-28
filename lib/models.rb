@@ -2,6 +2,7 @@ require 'sequel'
 require 'json'
 
 DB = Sequel.sqlite(Dir.pwd + '/db/air_quality.sqlite3')
+TIME_OFFSET = 4*60*60
 
 class City < Sequel::Model
     attr_accessor :max_year, :min_year, :is_active
@@ -57,6 +58,6 @@ end
 
 class Dc1100 < Sequel::Model
     def ts_to_s( format = '%Y-%m-%d %H:%M')
-        Time.at(measured_at).strftime(format)
+        Time.at(measured_at + TIME_OFFSET).strftime(format)
     end
 end
