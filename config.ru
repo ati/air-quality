@@ -1,4 +1,4 @@
 require 'rubygems'
 require 'sinatra'
-require 'publish_graphs'
+require 'main'
 run Sinatra::Application
