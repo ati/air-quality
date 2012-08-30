@@ -1,10 +1,94 @@
 <% content_for :scripts do %>
-    <!-- javascripts -->
+  <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+  <script type="text/javascript">
+
+    function data_url()
+    {
+      var data_url = '/data/dust.csv';
+      return data_url;
+    }
+
+    jQuery(document).ready(function($) {
+        graph = new Dygraph(
+            document.getElementById('graph'),
+            data_url(),
+            {
+                animatedZooms: true,
+                labelsDiv: 'graph_labels',
+                labelsDivWidth: 400,
+                hideOverlayOnMouseOut: false,
+                gridLineColor: 'rgb(213,213,213)',
+                fillGraph: true,
+                // labels: City.active_names(),
+                rollPeriod: 10,
+                // showRoller: true,
+                logscale: true,
+                clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
+                axisLabelFontSize: 13,
+                drawGapEdgePoints: true,
+                connectSeparatedPoints: true,
+            }
+        );
+    });
+  </script>
 <% end %>
 
 <% content_for :stylesheets do %>
     <!-- css -->
 <% end %>
 
+  <!-- informer -->
+  <div class="row">
+    <div class="span9 offset1">
+      <h4>Текущие значения:</h4><br />
+      <div class="span2">
+        <div class="row">
+          <small>Пыль &lt; 2.5 µm</small>
+        </div>
+        <div class="row">
+          <h2><%= @current.d1 %></h2>
+        </div>
+        <div class="row">
+          <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
+        </div>
+      </div>
+      <div class="span2">
+        <div class="row">
+          <small>Пыль &gt; 2.5 µm</small>
+        </div>
+        <div class="row">
+          <h2><%= @current.d2 %></h2>
+        </div>
+        <div class="row">
+          <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
+        </div>
+      </div>
+      <div class="span2 divider-vertical"></div>
+      <div class="span2">
+        <div class="row">
+          <small>Последний дождь</small>
+        </div>
+        <div class="row">
+          <h2><%= @rain.milimiters %></h2>
+        </div>
+        <div class="row">
+          <small>мм <code><%= @rain.started_at('%Y-%m-%d %H:%M') + '/' + @rain.duration %></code></small>
+        </div>
+      </div>
+      <% if @rain.is_falling %>
+      <div class="span2 alert">
+        Сейчас идет дождь.
+      </div>
+    <% end %>
+    </div>
+  </div>
 
-Here we go
+  <!-- graph -->
+  <div class="row">
+    <div class="span3 offset1"><br /><br /><h4>Пыль и дождь:</h4><br /></div>
+    <div class="span9" id="graph" style="width: 80%;"></div>
+  </div>
+  <br />
+  <div class="row">
+    <div class="span6 offset1" id="graph_labels"></div>
+  </div>

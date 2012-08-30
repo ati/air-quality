@@ -9,6 +9,37 @@
         <%= yield_content :scripts %>
     </head>
     <body>
+      <div class="container">
+        <header>
+          <%
+            menu_items = {
+              ''            => 'О воздухе',
+              'methodology' => 'Что и как измеряется',
+              'contacts'    => 'Контакты',
+            }
+          %>
+          <div class="navbar">
+            <div class="navbar-inner">
+              <a class="brand" href="/"><i class="icon-th"></i> Московский воздух</a>
+              <ul class="nav">
+                <li class="divider-vertical"></li>
+                <% menu_items.keys.each do |mik| %>
+                  <li<% if request.path_info == '/' + mik %> class="active"<% end %>><a href="/<%= mik %>"><%= menu_items[mik] %></a></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+          </header>
+  
         <%= yield %>
+        <!-- footer -->
+        <!--
+        <footer>
+          <div class="row" style="position:fixed; bottom:0;">
+            http://vozduh.msk.ru, 2012.
+          <div>
+        </footer>
+        -->
+      </div>
     </body>
 </html>
