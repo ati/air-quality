@@ -72,7 +72,7 @@ class Rain
 
     begin
       @data_points = load_range(start_day, end_day)
-      puts "start_day = #{start_day}, end_day = #{end_day}, data_points: #{@data_points.first.inspect} - #{@data_points.last.inspect}"
+      #puts "start_day = #{start_day}, end_day = #{end_day}, data_points: #{@data_points.first.inspect} - #{@data_points.last.inspect}"
       end_day = start_day
       start_day -= DAY_STEP
       @end_point ||= get_finish()
