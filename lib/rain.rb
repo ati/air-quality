@@ -72,7 +72,7 @@ class Rain
 
     begin
       @data_points = load_range(start_day, end_day)
-      puts "start_day = #{start_day}, end_day = #{end_day}, data_points: #{@data_points.first.inspect} - #{@data_points.last.inspect}"
+      #puts "start_day = #{start_day}, end_day = #{end_day}, data_points: #{@data_points.first.inspect} - #{@data_points.last.inspect}"
       end_day = start_day
       start_day -= DAY_STEP
       @end_point ||= get_finish()
@@ -169,10 +169,10 @@ class Rain
     end
 
     def get_finish()
-      current_point = @data_points.last
-      @data_points.each do |dp|
+      current_point = @data_points.first
+      @data_points.each_with_index do |dp,i|
         if dp[:value] != current_point[:value]
-          return dp
+          return @data_points[i-1]
         end
       end
       return nil
