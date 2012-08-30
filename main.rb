@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'rubygems'
 require 'sinatra'
 use Rack::CommonLogger
@@ -6,6 +7,7 @@ require 'json'
 require 'sequel'
 require 'parseconfig'
 require File.dirname(__FILE__) + '/lib/models'
+require File.dirname(__FILE__) + '/lib/rain'
 require 'sinatra/reloader' if development?
 require 'sinatra/content_for'
 
@@ -20,74 +22,44 @@ set :clean_trace, true
 enable :sessions, :logging
 
 get '/' do
+    @current = Dc1100.all.last
+    @rain = Rain.new #recent
+    @rain.find_last
     erb :index
 end
 
-get '/tmp' do
-    c = City.all.find(6).first
-    c.max_year
-    
-    # res.all #.map{|r| r[:group_id]}
-    #(DB["select distinct group_id from measurements where city_id = #{@default_city_id}"]).map {|r| r[:group_id]}
-end
 
-get '/cities' do
-    default_city = 6 #TODO: geoip
-    default_group = 1 #or session?
-
-    active_cities = (params[:city] || [default_city]).map{ |i| i.to_i }
-    @cities = City.order(:id).all {|c| c.is_active = true if active_cities.index(c.id) }
-
-    @max_year = 0;
-    @min_year = 9999;
-    @cities.each do |c| 
-        @max_year = c.max_year if c.max_year > @max_year
-        @min_year = c.min_year if c.min_year < @min_year
-    end
-
-    active_groups = (params[:group]|| [default_group]).map{ |i| i.to_i } 
-    @agroups = Group.order(:id).all {|g| g.is_active = true if active_groups.empty? || active_groups.index(g.id) }
-
-    @years = (2001 .. Time.now.year).to_a
-    @cur_year = Time.now.utc.year
-    erb :allergen
+get '/methodology' do
+  erb :methodology
 end
 
 
-get '/data/cities/:year' do
-    # render csv data
-    cities = (params[:city] || []).map {|i| i.to_i } 
-    agroups = (params[:group] || []).map {|i| i.to_i }
-    from_d = Time.mktime(params[:year]).utc.to_i
-    mms = {}
-    ts = []
+get '/contacts' do
+  erb :contacts
+end
 
-    cities.each do |c_id|
-        mms[c_id] = {}
-        agroups.each do |g_id|
-            mms[c_id][g_id] = {}
-            DB["select measured_at, sum(cnt) as cnt from measurements
-                where city_id = #{c_id} 
-                and group_id = #{g_id}
-                and measured_at between #{from_d} and #{from_d + 365*24*60*60}
-                group by measured_at"].all.map {|d| mms[c_id][g_id][d[:measured_at]] = d[:cnt]}
-            ts += mms[c_id][g_id].keys
-        end
+
+get '/robots.txt' do
+  erb :robots, :layout => false
+end
+
+
+get '/data/dust.csv' do
+  to = Time.now.utc.to_i
+  from = to - 2.days
+
+  air = Dc1100.timerange(from, to)
+  rain = Rain.new
+  rain.set_range(from, to)
+
+  csv_string = CSV.generate do |csv|
+    csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm','дождь мм.']
+    air.each_with_index do |a,i|
+      csv << [Time.at(a.measured_at).strftime('%Y-%m-%d %H:%M'), a.d1, a.d2, rain.data_points[i][:count]]
     end
+  end
 
-    csv_string = CSV.generate do |csv|
-        ts.uniq.each do |ts|
-            row = [Time.at(ts).strftime("%Y-%m-%d")]
-            mms.each do |c_id, gdata|
-                gdata.each do |g_id, mdata|
-                    row.push(mdata[ts])
-                end
-            end
-            csv << row
-        end
-    end
-
-    csv_string
+  csv_string
 end
 
 post '/data/dc1100' do
@@ -108,6 +80,64 @@ get '/data/dc1100.?:format?' do
 end
 
 
+#get '/cities' do
+#    default_city = 6 #TODO: geoip
+#    default_group = 1 #or session?
+#
+#    active_cities = (params[:city] || [default_city]).map{ |i| i.to_i }
+#    @cities = City.order(:id).all {|c| c.is_active = true if active_cities.index(c.id) }
+#
+#    @max_year = 0;
+#    @min_year = 9999;
+#    @cities.each do |c| 
+#        @max_year = c.max_year if c.max_year > @max_year
+#        @min_year = c.min_year if c.min_year < @min_year
+#    end
+#
+#    active_groups = (params[:group]|| [default_group]).map{ |i| i.to_i } 
+#    @agroups = Group.order(:id).all {|g| g.is_active = true if active_groups.empty? || active_groups.index(g.id) }
+#
+#    @years = (2001 .. Time.now.year).to_a
+#    @cur_year = Time.now.utc.year
+#    erb :allergen
+#end
+#
+#
+#get '/data/cities/:year' do
+#    # render csv data
+#    cities = (params[:city] || []).map {|i| i.to_i } 
+#    agroups = (params[:group] || []).map {|i| i.to_i }
+#    from_d = Time.mktime(params[:year]).utc.to_i
+#    mms = {}
+#    ts = []
+#
+#    cities.each do |c_id|
+#        mms[c_id] = {}
+#        agroups.each do |g_id|
+#            mms[c_id][g_id] = {}
+#            DB["select measured_at, sum(cnt) as cnt from measurements
+#                where city_id = #{c_id} 
+#                and group_id = #{g_id}
+#                and measured_at between #{from_d} and #{from_d + 365*24*60*60}
+#                group by measured_at"].all.map {|d| mms[c_id][g_id][d[:measured_at]] = d[:cnt]}
+#            ts += mms[c_id][g_id].keys
+#        end
+#    end
+#
+#    csv_string = CSV.generate do |csv|
+#        ts.uniq.each do |ts|
+#            row = [Time.at(ts).strftime("%Y-%m-%d")]
+#            mms.each do |c_id, gdata|
+#                gdata.each do |g_id, mdata|
+#                    row.push(mdata[ts])
+#                end
+#            end
+#            csv << row
+#        end
+#    end
+#
+#    csv_string
+#end
 
 helpers do
   def render(*args)
