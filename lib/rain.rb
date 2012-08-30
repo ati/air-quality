@@ -169,10 +169,10 @@ class Rain
     end
 
     def get_finish()
-      current_point = @data_points.last
-      @data_points.each do |dp|
+      current_point = @data_points.first
+      @data_points.each_with_index do |dp,i|
         if dp[:value] != current_point[:value]
-          return dp
+          return @data_points[i-1]
         end
       end
       return nil
