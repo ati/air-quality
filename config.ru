@@ -1,4 +1,4 @@
 require 'rubygems'
 require 'sinatra'
-require 'main'
+require File.dirname(__FILE__) + '/main'
 run Sinatra::Application
