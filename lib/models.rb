@@ -65,3 +65,37 @@ class Dc1100 < Sequel::Model
         Dc1100.reverse_order(:measured_at).where(:measured_at => from.to_i .. to.to_i).all
     end
 end
+
+class Dc1100s_stat < Sequel::Model
+
+
+  def quant(i)
+    (quantiles.split(',').map{|x| x.to_i})[i]
+  end
+
+
+  def level(n)
+    qs = quantiles.split(',').map{|x| x.to_i}
+
+    if n.between?(0, qs[0])
+      return 0
+    elsif n.between?(qs[0], qs[1])
+      return 1
+    elsif n.between?(qs[1], qs[2])
+      return 2
+    elsif n.between?(qs[2], qs[3])
+      return 3
+    elsif n.between?(qs[3], qs[4])
+      return 4
+    else
+      return 5
+    end
+  end
+
+
+  def direction
+    return 0 if trend.between?(-1,1)
+    return 1 if trend > 0
+    return -1
+  end
+end

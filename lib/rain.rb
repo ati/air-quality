@@ -34,6 +34,19 @@ class Numeric
     minutes
   end
 
+  def level_class
+    case self.to_int
+      when 0 then 'success'
+      when 1 then 'info'
+      when 2 then 'warning'
+      when 3 then 'important'
+      when 4 then 'important'
+      when 5 then 'inverse'
+      else raise "Unknown level"
+    end
+  end
+
+
 end
 
 class Rain

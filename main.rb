@@ -25,6 +25,8 @@ get '/' do
     @current = Dc1100.all.last
     @rain = Rain.new #recent
     @rain.find_last
+    @d1_stat = Dc1100s_stat.where(:n_sensor => 1).first
+    @d2_stat = Dc1100s_stat.where(:n_sensor => 2).first
     erb :index
 end
 
