@@ -5,7 +5,7 @@ suppressMessages(library(RSQLite))
 ## constants
 db_name =  "~ati/air-quality/db/air_quality.sqlite3"
 averages = c("select avg(d1) as d from dc1100s group by measured_at/3600", "select avg(d2) as d from dc1100s group by measured_at/3600")
-trends = c("select measured_at, d1 as d from dc1100s order by id desc limit 60", "select measured_at, d2 as d from dc1100s order by id desc limit 60")
+trends = c("select measured_at, d1 as d from dc1100s order by id desc limit 300", "select measured_at, d2 as d from dc1100s order by id desc limit 300")
 sql = data.frame(averages, trends)
 
 dbh = dbConnect(SQLite(), db_name)
