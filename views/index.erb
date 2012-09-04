@@ -25,6 +25,7 @@
                 logscale: true,
                 clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
                 axisLabelFontSize: 13,
+                labelsSeparateLines: true,
                 drawGapEdgePoints: true,
                 connectSeparatedPoints: true,
             }
@@ -81,7 +82,7 @@
         <div class="row">
           <small>мм
             <br />
-            <code><%= @rain.started_at('%Y-%m-%d %H:%M') + '/' + @rain.duration %></code>
+            <code><%= @rain.started_at('%Y-%m-%d %H:%M').to_s + '/' + @rain.duration.to_s %></code>
           </small>
         </div>
       </div>
