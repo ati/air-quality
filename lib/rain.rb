@@ -106,6 +106,7 @@ class Rain
 
 
   def is_falling
+    return nil if @end_point.nil?
     return Time.now.to_i - @end_point[:measured_at] < RAIN_TIMEOUT
   end
 

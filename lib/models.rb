@@ -58,7 +58,7 @@ end
 
 class Dc1100 < Sequel::Model
     def ts_to_s( format = '%Y-%m-%d %H:%M')
-        Time.at(measured_at + TIME_OFFSET).strftime(format)
+        Time.at(measured_at + TIME_OFFSET).utc.strftime(format)
     end
 
     def self.timerange(from, to)
