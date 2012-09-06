@@ -14,13 +14,14 @@
             data_url(),
             {
                 animatedZooms: true,
+                legend: 'always',
                 labelsDiv: 'graph_labels',
                 labelsDivWidth: 400,
                 hideOverlayOnMouseOut: false,
                 gridLineColor: 'rgb(213,213,213)',
-                fillGraph: true,
+                // fillGraph: true,
                 // labels: City.active_names(),
-                rollPeriod: 10,
+                rollPeriod: 3,
                 // showRoller: true,
                 logscale: true,
                 clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
@@ -28,6 +29,7 @@
                 labelsSeparateLines: true,
                 // drawGapEdgePoints: true,
                 connectSeparatedPoints: false,
+                customBars: true,
             }
         );
     });

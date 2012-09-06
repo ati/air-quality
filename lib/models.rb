@@ -57,12 +57,40 @@ end
 
 
 class Dc1100 < Sequel::Model
+    AVG_INTERVAL = 30*60
+
     def ts_to_s( format = '%Y-%m-%d %H:%M')
         Time.at(measured_at + TIME_OFFSET).utc.strftime(format)
     end
 
     def self.timerange(from, to)
         Dc1100.reverse_order(:measured_at).where(:measured_at => from.to_i .. to.to_i).all
+    end
+
+    def self.deviations_range(from, to)
+      # округлить на границу интервала усреднения
+      samples = timerange(from, to)
+      dev = []
+      i = 0
+      len = samples.length
+
+      while (i < len)
+        j = i
+        i += 1 while (i < len -2) && (samples[j].measured_at - samples[i].measured_at < AVG_INTERVAL)
+
+        d1 = samples[j..i].map {|d| d.d1}
+        d2 = samples[j..i].map {|d| d.d2}
+        rc = samples[j..i].map {|d| d.rc}
+        ma = samples[j..i].map {|d| d.measured_at}
+
+        r0 = rc[0]
+        rc.map! {|rv| nv = r0 - rv; r0 = rv; nv}
+        dev << { :d1 => d1.min_avg_max, :d2 => d2.min_avg_max, :rc => rc.min_avg_max,  :measured_at => ma.avg }
+
+        i += 1
+      end
+
+      return dev
     end
 end
 

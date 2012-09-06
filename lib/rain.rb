@@ -1,3 +1,21 @@
+class Array
+  def sum
+    inject(0.0) {|result,el| result + el}
+  end
+
+  def avg
+    sum / size
+  end
+
+  def min_avg_max
+    return [nil] unless size > 0
+    return [nil] if sum == 0
+    mm = minmax
+    [mm[0], avg.round, mm[1]]
+  end
+end
+
+
 class Numeric
   def duration
     secs  = self.to_int
