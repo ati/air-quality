@@ -4,7 +4,7 @@
 
     function data_url()
     {
-      var data_url = '/data/dust.csv';
+      var data_url = '/data/dust.csv?r=' + new Date().getTime();
       return data_url;
     }
 
@@ -26,8 +26,8 @@
                 clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
                 axisLabelFontSize: 13,
                 labelsSeparateLines: true,
-                drawGapEdgePoints: true,
-                connectSeparatedPoints: true,
+                // drawGapEdgePoints: true,
+                connectSeparatedPoints: false,
             }
         );
     });

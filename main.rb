@@ -57,7 +57,8 @@ get '/data/dust.csv' do
   csv_string = CSV.generate do |csv|
     csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm','дождь мм.']
     air.each_with_index do |a,i|
-      csv << [a.ts_to_s, a.d1, a.d2, rain.data_points[i][:count]]
+      r = rain.data_points[i][:count]
+      csv << [a.ts_to_s, a.d1, a.d2, r.eql?(0)? nil : r]
     end
   end
 
