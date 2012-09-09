@@ -15,6 +15,12 @@ class Array
   end
 end
 
+class Time
+  def season
+    ss = %w(spring summer autumn winter)
+    ss[(month - 1)/3] 
+  end
+end
 
 class Numeric
   def duration

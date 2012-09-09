@@ -1,0 +1,66 @@
+<% if @date.nil? %>
+  <div class="alert alert-block">
+    <h4>Увага!</h4>
+    <p>
+  Вы ввели какую-то неправильную дату. На этом сайте все толковые даты начитаются в ХХ веке и заканчиваются текущей, сегодняшней. Древние времена и будущее рассмотрим как-нибудь потом.
+    </p>
+    <p>
+      Ссылка на хорошую дату бывает одной из трех видов:
+      <ol>
+        <li>/date/YYYY</li>
+        <li>/date/YYYY/MM</li>
+        <li>/date/YYYY/spring|summer|autumn|winter</li>
+        <li>/date/YYYY/MM/DD</li>
+      </ol>
+    </p>
+    <p>
+      По-другому тут не понимают.
+    </p>
+</div>
+<% else %>
+
+  <% content_for :scripts do %>
+    <script type="text/javascript">
+      // var disqus_developer = 1;
+      var disqus_shortname = 'vozduh';
+      var disqus_identifier = '<%= request.path_info %>';
+
+       (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+  <% end %>
+
+  <div class="row">
+    <div class="span9">
+      <h2><%= (spell_date @date, @span).capitalize %></h2>
+      Описание необычайных и замечательных явлений в московской погоде.
+      <div id="disqus_thread"></div>
+    </div>
+  </div>
+
+  <br />
+  <br />
+  <div class="row">
+    <div class="span7 well">
+      <small>
+        <h5>Правила раздела "даты"</h5>
+        Правила простые: пишите о том, что можно (было) измерить или сфотографировать. Например про радуги, снегопады, ураганы, метеоритные дожди и температурные аномалии. Укажите по возможности и необходимости место, где наблюдалось явление или ссылку на источник, в котором это явление описано.
+        <br />
+        <br />
+        Ссылка на хорошую дату бывает любого из трех видов:
+        <br />
+        <ol>
+          <li>/date/YYYY</li>
+          <li>/date/YYYY/MM</li>
+          <li>/date/YYYY/spring|summer|autumn|winter</li>
+          <li>/date/YYYY/MM/DD</li>
+        </ol>
+        На сайте можно набрать любую из этих ссылок и записать свои воспоминания и впечатления об этом времени. 
+      </small>
+    </div>
+  </div>
+
+<% end %>

@@ -21,6 +21,10 @@ set :config, ParseConfig.new(File.dirname(__FILE__) + '/db/dust.config')
 set :clean_trace, true
 enable :sessions, :logging
 
+set :default_encoding, 'utf-8'
+#Encoding.default_external = 'utf-8'
+#Encoding.default_internal = 'utf-8'
+
 get '/' do
     @current = Dc1100.all.last
     @rain = Rain.new #recent
@@ -84,8 +88,35 @@ get '/data/dc1100.?:format?' do
 end
 
 
+
+get '/date/:year' do
+  @date = make_date(params[:year], 1, 1)
+  @span = :year
+  erb :date
+end
+
+get '/date/:year/:month' do
+  seasons = ['spring', 'summer', 'autumn', 'winter']
+  if seasons.include?(params[:month])
+    @date = make_date(params[:year], seasons.index(params[:month])*3 + 3, 1)
+    @span = :season
+    @season = params[:month]
+  else
+    @date = make_date(params[:year], params[:month], 1)
+    @span = :month
+  end
+  erb :date
+end
+
+get '/date/:year/:month/:day' do
+  @date = make_date(params[:year], params[:month], params[:day])
+  @span = :day
+  erb :date
+end
+
+
 #get '/cities' do
-#    default_city = 6 #TODO: geoip
+#    defaul'_city = 6 #TODO: geoip
 #    default_group = 1 #or session?
 #
 #    active_cities = (params[:city] || [default_city]).map{ |i| i.to_i }
@@ -143,10 +174,40 @@ end
 #    csv_string
 #end
 
+
+
 helpers do
+  def make_date(y, m, d)
+    y = y.to_i
+    m = m.to_i
+    d = d.to_i
+    date = (y.between?(2010, Time.now.year) && m.between?(1, 12) && d.between?(1,31))? Time.mktime(y,m,d) : nil
+    return nil if date.nil?
+    return (date >= Time.mktime(1900, 1, 1))? date : nil # interested in more or less recent dates
+  end
+
+  def spell_date(d, span)
+    return "какая-то неправильная дата: #{d.inspect}" unless d.kind_of?(Time)
+    months = %w(padding Январь Февраль Март Апрель Май Июнь Июль Август Сентябрь Октябрь Ноябрь Декабрь)
+    of_month = %w(padding января февраля марта апреля мая июня июля августа сентября октября ноября декабря)
+    seasons = %w(Весна Лето Осень Зима)
+
+    case span
+    when :year
+      d.year.to_s + " год"
+    when :month
+      [months[d.month], d.year, "года"].join(' ')
+    when :season
+      [seasons[(d.month - 1)/3], d.year, 'года'].join(' ')
+    else #it should better be :day
+      [d.strftime('%d'), of_month[d.month], d.year, "года"].join(' ')
+    end
+  end
+
+
   def render(*args)
     if args.first.is_a?(Hash) && args.first.keys.include?(:partial)
-      return erb "_#{args.first[:partial]}".to_sym, :layout => false
+      return erb "_#{args.first[:partial]}".to_sym, :layout => false, :default_encoding => 'utf-8'
     else
       super
     end
