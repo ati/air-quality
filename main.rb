@@ -92,6 +92,7 @@ end
 get '/date/:year' do
   @date = make_date(params[:year], 1, 1)
   @span = :year
+  response['Access-Control-Allow-Origin'] = 'http://disqus.com'
   erb :date
 end
 
@@ -105,12 +106,14 @@ get '/date/:year/:month' do
     @date = make_date(params[:year], params[:month], 1)
     @span = :month
   end
+  response['Access-Control-Allow-Origin'] = 'http://disqus.com'
   erb :date
 end
 
 get '/date/:year/:month/:day' do
   @date = make_date(params[:year], params[:month], params[:day])
   @span = :day
+  response['Access-Control-Allow-Origin'] = 'http://disqus.com'
   erb :date
 end
 
