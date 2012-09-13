@@ -200,7 +200,7 @@ helpers do
     d = d.to_i
     date = (y.between?(1900, Time.now.year) && m.between?(1, 12) && d.between?(1,31))? Time.mktime(y,m,d) : nil
     return nil if date.nil?
-    return date.between?(Time.mktime(1900, 1, 1), Time.now)? date : nil # interested in more or less recent dates
+    return date.between?(Time.mktime(1900, 1, 1), Time.now.utc + TIME_OFFSET)? date : nil # interested in more or less recent dates
   end
 
   def spell_date(d, span)
@@ -220,16 +220,6 @@ helpers do
       [d.strftime('%d'), of_month[d.month], d.year, "года"].join(' ')
     end
   end
-
-
-  # picture of the day
-  def get_potd(d, span)
-   pic_dir = File.dirname(__FILE__) + '/public/potd'
-   now = Time.now.utc.to_i + TIME_OFFSET
-   today_dir = [pic_dir, Time.at(now).strftime('%Y/%m/%d')].join('/')
-   yesterday_dir = [pic_dir, Time.at(now - 24.hours).strftime('%Y/%m/%d')].join('/')
-  end
-
 
   def render(*args)
     if args.first.is_a?(Hash) && args.first.keys.include?(:partial)
