@@ -1,8 +1,13 @@
 require 'exifr'
 
 class Potd
-  attr_accessor :url, :width, :height, :lat, :lon, :created_at, :camera
-  BASE_DIR = '/Users/ati/Dropbox/projects/air-quality'
+  attr_accessor :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
+
+
+  def to_html
+    "<img src=\"#{@url}\" width=\"#{@width}\" height=\"#{@height}\" class=\"img-rounded\" />"
+  end
+
 
   def find(d, span)
     paths = []
@@ -30,7 +35,9 @@ class Potd
     images = []
     d = [BASE_DIR, 'public', 'potd'].join(File::SEPARATOR)
     paths.each do |p|
-      images += Dir.entries([d,p].join(File::SEPARATOR)).grep(/\.jpg$/).map {|i| [p,i]}
+      image_dir = [d,p].join(File::SEPARATOR)
+      next unless File.exists?(image_dir)
+      images += Dir.entries(image_dir).grep(/\.jpg$/).map {|i| [p,i]}
     end
 
     puts images.inspect
@@ -50,6 +57,7 @@ class Potd
     @height = fe.height
     @created_at = fe.date_time.our_format
     @camera = fe.model
+    @copyright = fe.copyright
     if !fe.gps_latitude_ref.nil?
       ll = dms2dec(fe.gps_latitude_ref, fe.gps_latitude, fe.gps_longitude_ref, fe.gps_longitude )
       @lat = ll[0]

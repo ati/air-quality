@@ -1,15 +1,24 @@
 # encoding: utf-8
 require 'rubygems'
+
 require 'sinatra'
+require 'sinatra/reloader' if development?
+require 'sinatra/content_for'
 use Rack::CommonLogger
+
 require 'csv'
 require 'json'
 require 'sequel'
 require 'parseconfig'
-require File.dirname(__FILE__) + '/lib/models'
-require File.dirname(__FILE__) + '/lib/rain'
-require 'sinatra/reloader' if development?
-require 'sinatra/content_for'
+require 'exifr'
+
+BASE_DIR = File.dirname(__FILE__)
+$LOAD_PATH << BASE_DIR + '/lib'
+require 'core'
+require 'potd'
+require 'models'
+require 'rain'
+
 
 # require 'ipgeobase'
 # ip_meta = Ipgeobase.lookup('213.232.243.233')
@@ -88,33 +97,38 @@ get '/data/dc1100.?:format?' do
 end
 
 
+def render_date(date, span)
+  @date = date
+  @span = span
 
-get '/date/:year' do
-  @date = make_date(params[:year], 1, 1)
-  @span = :year
+  if !@date.nil?
+    @potd = Potd.new
+    @potd.find(date, span)
+  end
+
   response['Access-Control-Allow-Origin'] = 'http://disqus.com'
   erb :date
+end
+
+
+get '/date/:year' do
+  render_date(make_date(params[:year], 1, 1), :year)
 end
 
 get '/date/:year/:month' do
   seasons = ['spring', 'summer', 'autumn', 'winter']
   if seasons.include?(params[:month])
-    @date = make_date(params[:year], seasons.index(params[:month])*3 + 3, 1)
-    @span = :season
-    @season = params[:month]
+    d = make_date(params[:year], seasons.index(params[:month])*3 + 3, 1)
+    s = :season
   else
-    @date = make_date(params[:year], params[:month], 1)
-    @span = :month
+    d = make_date(params[:year], params[:month], 1)
+    s = :month
   end
-  response['Access-Control-Allow-Origin'] = 'http://disqus.com'
-  erb :date
+  render_date(d, s)
 end
 
 get '/date/:year/:month/:day' do
-  @date = make_date(params[:year], params[:month], params[:day])
-  @span = :day
-  response['Access-Control-Allow-Origin'] = 'http://disqus.com'
-  erb :date
+  render_date(make_date(params[:year], params[:month], params[:day]), :day)
 end
 
 
@@ -184,9 +198,9 @@ helpers do
     y = y.to_i
     m = m.to_i
     d = d.to_i
-    date = (y.between?(2010, Time.now.year) && m.between?(1, 12) && d.between?(1,31))? Time.mktime(y,m,d) : nil
+    date = (y.between?(1900, Time.now.year) && m.between?(1, 12) && d.between?(1,31))? Time.mktime(y,m,d) : nil
     return nil if date.nil?
-    return (date >= Time.mktime(1900, 1, 1))? date : nil # interested in more or less recent dates
+    return date.between?(Time.mktime(1900, 1, 1), Time.now)? date : nil # interested in more or less recent dates
   end
 
   def spell_date(d, span)
@@ -205,6 +219,15 @@ helpers do
     else #it should better be :day
       [d.strftime('%d'), of_month[d.month], d.year, "года"].join(' ')
     end
+  end
+
+
+  # picture of the day
+  def get_potd(d, span)
+   pic_dir = File.dirname(__FILE__) + '/public/potd'
+   now = Time.now.utc.to_i + TIME_OFFSET
+   today_dir = [pic_dir, Time.at(now).strftime('%Y/%m/%d')].join('/')
+   yesterday_dir = [pic_dir, Time.at(now - 24.hours).strftime('%Y/%m/%d')].join('/')
   end
 
 

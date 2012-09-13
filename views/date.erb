@@ -16,28 +16,94 @@
     <p>
       По-другому тут не понимают.
     </p>
-</div>
+  </div>
 <% else %>
 
   <% content_for :scripts do %>
+  <% if !@potd.nil? && !@potd.lat.nil? %>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDVmaB8jQSw1xnSj6pnWcfi1hDhROnPZT0&sensor=false">
+    </script>
+    <script type="text/javascript">
+      function initialize_map() {
+        var photo_position = new google.maps.LatLng(<%= @potd.lat %>, <%= @potd.lon %>);
+        var mapOptions = {
+          center: photo_position,
+          zoom: 13,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+        var marker = new google.maps.Marker({
+          position: photo_position,
+          map: map,
+          title: "Photo location"
+        });
+      }
+
+      $(document).ready(function() {
+        initialize_map();
+      });
+    </script>
+  <% end %>
+
     <script type="text/javascript">
       // var disqus_developer = 1;
       var disqus_shortname = 'vozduh';
       var disqus_identifier = '<%= request.path_info %>';
 
-       (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
+     (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+
     </script>
   <% end %>
 
-  <div class="row">
-    <div class="span9">
+    <div class="span10">
       <h2><%= (spell_date @date, @span).capitalize %></h2>
       Описание необычайных и замечательных явлений в московской погоде.
-      <div id="disqus_thread"></div>
+      <% if !@potd.nil? %>
+      <div class="row well">
+        <div class="span6">
+          <%= @potd.to_html %>
+          <br />
+          <small>
+            Хотите публиковать здесь свои фотографии воздуха и пыли? <a href="mailto:variomap@gmail.com">Напишите мне письмо</a>, это запросто.
+          </small>
+        </div>
+
+        <div class="span3" style="padding-left: 10px;">
+          <div class="row">
+            <div id="map_canvas" style="width: 90%; height: 200px;"></div>
+          </div>
+          <div class="row">
+            <br />
+            <table class="table">
+              <tr>
+                <td><b>Снято:</b></td>
+                <td><%= @potd.created_at %></td>
+              </tr>
+              <% if !@potd.camera.nil? %>
+              <tr>
+                <td><b>Камера:</b></td>
+                <td><%= @potd.camera %></td>
+              </tr>
+              <% end %>
+              <% if !@potd.copyright.nil? %>
+              <tr>
+                <td><b>Автор:</b></td>
+                <td><%= @potd.copyright %></td>
+              </tr>
+              <% end %>
+            </table>
+          </div>
+        </div>
+      </div>
+      <% end %>
+
+      <div class="row">
+        <div id="disqus_thread"></div>
+      </div>
     </div>
   </div>
 
@@ -61,6 +127,5 @@
         На сайте можно набрать любую из этих ссылок и записать свои воспоминания и впечатления об этом времени. 
       </small>
     </div>
-  </div>
 
 <% end %>
