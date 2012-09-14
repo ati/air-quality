@@ -55,7 +55,7 @@
           <h2><%= @current.d1 %> <span style="color: silver;"><%= arrows[@d1_stat.direction + 1] %></span></h2>
         </div>
         <div class="row">
-          <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>"><%= labels[@d1_stat.level(@current.d1)] %></span>
+          <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>"><a href="#how_many_is_many" style="color: white;"><%= labels[@d1_stat.level(@current.d1)] %></a></span>
           <br />
           <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
         </div>
@@ -68,7 +68,7 @@
           <h2><%= @current.d2 %> <span style="color: silver;"><%= arrows[@d2_stat.direction + 1] %></span></h2>
         </div>
         <div class="row">
-          <span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>"><%= labels[@d2_stat.level(@current.d2)] %></span>
+          <span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>"><a href="#how_many_is_many" style="color: white;"><%= labels[@d2_stat.level(@current.d2)] %></a></span>
           <br />
           <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
         </div>
@@ -103,79 +103,84 @@
   </div>
   <br />
   <div class="row">
-    <div class="span6 offset1" id="graph_labels"></div>
-  </div>
-  <br />
-
-  <div class="row">
-      <div class="span4 offset1">
-        Производитель прибора, измеряющего уровни пыли в воздухе, приводит следующие характеристики для значений мелкой пыли:
-        <table class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Количество</th>
-              <th>Качество воздуха</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>3000+</td>
-              <td>Очень плохое</td>
-            </tr>
-            <tr>
-              <td>1050-3000</td>
-              <td>Плохое</td>
-            </tr>
-            <tr>
-              <td>300-1050</td>
-              <td>Нормальное</td>
-            </tr>
-            <tr>
-              <td>150-300</td>
-              <td>Хорошее</td>
-            </tr>
-            <tr>
-              <td>75-150</td>
-              <td>Очень хорошее</td>
-            </tr>
-            <tr>
-              <td>0-75</td>
-              <td>Отличное</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="span4">
-        Исторически наши измерения дают следущие <a href="http://ru.wikipedia.org/wiki/%D0%9A%D0%B2%D0%B0%D0%BD%D1%82%D0%B8%D0%BB%D1%8C">квантили</a> (т.е. грубо говоря вероятности встретить воздух соответствующей "пыльности"). <span class="badge badge-info">Метки</span> качества воздуха у текущих значений выше проставлены в соответствии с этой табличкой.
-        <table class="table table-striped table-hover">
-          <thead>
-            <tr>
-              <th>Процент</th>
-              <th>Значение &lt; 2.5 µm</th>
-              <th>Значение &gt; 2.5 µm</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% (0..4).each do |i| %>
-            <tr>
-              <td><%= i*25 %>%</td>
-              <td><%= @d1_stat.quant(i) %></td>
-              <td><%= @d2_stat.quant(i) %></td>
-            </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-  </div>
-
-  <br />
-  <br />
-  <div class="row">
-    <div class="span9 offset1">
-      <h4>Давление и температура за последние дни</h4>
-      <br />
-      <img src="http://ljsm.tautology2.net/weather/current_pressure.png" width="650" height="150" />
-      <img src="http://ljsm.tautology2.net/weather/current_temperature.png" width="650" height="150" />
+    <div class="span3 offset1" id="graph_labels"></div>
+    <div class="span6">
+      <small>
+        Значения уровней пыли везде на этих страничках измеряют количество пылинок в кубическом <b>футе</b> воздуха, делённое на 100. Чтобы получить штуки пылинок в кубическом <b>метре</b> воздуха, надо умножить приведённые значения примерно на 3. Или точно на 2.8316846.
+      </small>
     </div>
   </div>
+  <br />
+
+  <div class="row">
+    <div class="span9 offset1">
+      <p>
+      Что означают эти красивые графики? Во-первых то, что в московском воздухе есть пыль. Её довольно много. Во-вторых то, что её уровень меняется день ото дня. На графике внизу показано, как меняется уровень мелкой пыли в зависимости от дня недели. Видно, что максимальный уровень достигался в середине недели, в районе среды-четверга. Скорее всего, бегать и кататься на велосипеде в начале этой осени лучше было с субботы до вторника. На первой неделе сентября минимальный уровень наблюдался в воскресенье-понедельник.  Наш аналитический отдел постарается и дальше давать ценные прогнозы на прошлое. И может быть даже на настоящее (в конце второй сентябрьской недели, кстати, уровень устойчиво растёт), следите за новостями.
+      </p>
+      <img src="/img/weekly_filtered.png" width="786" height="214" />
+    </div>
+  </div>
+
+
+  <br />
+  <br />
+  <a name="how_many_is_many"></a>
+  <div class="row">
+    <div class="span9 offset1">
+      <p>
+      Что значит <span class="badge badge-important">много пыли</span> или <span class="badge badge-warning">нормально</span>? Много по сравнению с чем? Есть два способа ответить на этот вопрос. Во-первых на него дает ответ производитель прибора, измеряющего пыль. Например, он определённо считает, что состояние воздуха, соответствующее величинам от 1050 до 3000 характеризуется словом "плохое". С другой стороны, мы можем исходить из того, что у нас бывает <em>обычно</em>, т.е. из истории наблюдений. 75 раз из 100 померяв в Москве уровень пыли мы увидим значение больше 1000. Поэтому сейчас количество пыли от 1011 до 1852 мы считаем <em>нормальным</em>, именно потому, что в половине измерений мы увидим уровень существенно выше. Мы оцениваем уровень загрязнения и присваиваем цветные таблички под цифрами наверху вторым способом.
+      </p>
+      
+      <p>
+      <br />
+      <br />
+        Если свести эти цифры воедино, то получится следующее:
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Качество воздуха</th>
+              <th>По паспорту прибора</th>
+              <th>По опыту измерений</th>
+            </tr>
+          </thead>
+  <% labels = ['отлично','хорошо','нормально','выше нормы','плохо','очень плохо'] %>
+          <tbody>
+            <tr>
+              <td><span class="badge badge-success">Отличное</span></td>
+              <td>0-75</td>
+              <td>0 - <%= @d1_stat.quant(0) %></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-info">Хорошее</span></td>
+              <td>75-300</td>
+              <td><%= @d1_stat.quant(0) %> - <%= @d1_stat.quant(1) %></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-warning">Нормальное</span></td>
+              <td>300-1050</td>
+              <td><%= @d1_stat.quant(1) %> - <%= @d1_stat.quant(2) %></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-important">Выше нормы</span></td>
+              <td>1050-3000</td>
+              <td><%= @d1_stat.quant(2) %> - <%= @d1_stat.quant(3) %></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-important">Плохое</span></td>
+              <td>1050-3000</td>
+              <td><%= @d1_stat.quant(3) %> - <%= @d1_stat.quant(4) %></td>
+            </tr>
+            <tr>
+              <td><span class="badge badge-inverse">Очень плохое</span></td>
+              <td>3000+</td>
+              <td><%= @d1_stat.quant(4) %>+</td>
+            </tr>
+            
+        </table>
+      </p>
+    </div>
+  </div>
+
+
+  <br />
+  <br />
