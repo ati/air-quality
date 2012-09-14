@@ -41,7 +41,7 @@
 <% end %>
 
   <!-- informer -->
-  <% labels = ['отлично','хорошо','нормально','выше нормы','плохо','очень плохо'] %>
+  <% labels = ['отлично','хорошо','нормально','плохо','очень плохо'] %>
   <% arrows = ['⤵', '&#x2192;', '⤴'] %>
 
   <div class="row">
@@ -134,8 +134,8 @@
       <p>
       <br />
       <br />
-        Если свести эти цифры воедино, то получится следующее:
-        <table class="table table-striped table-hover">
+        Если свести эти цифры воедино, то получится следующее (строка, соответствующая текущему уровню, подсвечена зеленым):
+        <table class="table table-striped">
           <thead>
             <tr>
               <th>Качество воздуха</th>
@@ -143,39 +143,27 @@
               <th>По опыту измерений</th>
             </tr>
           </thead>
-  <% labels = ['отлично','хорошо','нормально','выше нормы','плохо','очень плохо'] %>
           <tbody>
-            <tr>
-              <td><span class="badge badge-success">Отличное</span></td>
-              <td>0-75</td>
-              <td>0 - <%= @d1_stat.quant(0) %></td>
+          <%
+            dc1100_values = [0, 75, 300, 1050, 3000]
+            quant_values = [0]
+            (0..3).each do |i|
+              quant_values << @d1_stat.quant(i)
+            end
+          %>
+          <% (0..3).each do |i| %>
+            <tr<%= @current.d1.between?(quant_values[i], quant_values[i+1])? ' class="success"' : '' %>>
+              <td><span class="badge badge-<%= @d1_stat.level(quant_values[i+1]).level_class %>"><%= labels[i] %></span></td>
+              <td><%= dc1100_values[i] %>-<%= dc1100_values[i+1] %></td>
+              <td><%= quant_values[i] %>-<%= quant_values[i+1] %></td>
             </tr>
-            <tr>
-              <td><span class="badge badge-info">Хорошее</span></td>
-              <td>75-300</td>
-              <td><%= @d1_stat.quant(0) %> - <%= @d1_stat.quant(1) %></td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-warning">Нормальное</span></td>
-              <td>300-1050</td>
-              <td><%= @d1_stat.quant(1) %> - <%= @d1_stat.quant(2) %></td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-important">Выше нормы</span></td>
-              <td>1050-3000</td>
-              <td><%= @d1_stat.quant(2) %> - <%= @d1_stat.quant(3) %></td>
-            </tr>
-            <tr>
-              <td><span class="badge badge-important">Плохое</span></td>
-              <td>1050-3000</td>
-              <td><%= @d1_stat.quant(3) %> - <%= @d1_stat.quant(4) %></td>
-            </tr>
-            <tr>
+          <% end %>
+            <tr<%= (@current.d1 > quant_values.last)? ' class="success"' : '' %>>
               <td><span class="badge badge-inverse">Очень плохое</span></td>
-              <td>3000+</td>
-              <td><%= @d1_stat.quant(4) %>+</td>
+              <td><%= dc1100_values.last %>+</td>
+              <td><%= quant_values.last %>+</td>
             </tr>
-            
+          </tbody>
         </table>
       </p>
     </div>

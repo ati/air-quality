@@ -113,10 +113,8 @@ class Dc1100s_stat < Sequel::Model
       return 2
     elsif n.between?(qs[2], qs[3])
       return 3
-    elsif n.between?(qs[3], qs[4])
-      return 4
     else
-      return 5
+      return 4
     end
   end
 

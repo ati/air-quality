@@ -81,8 +81,7 @@ class Numeric
       when 1 then 'info'
       when 2 then 'warning'
       when 3 then 'important'
-      when 4 then 'important'
-      when 5 then 'inverse'
+      when 4 then 'inverse'
       else raise "Unknown level"
     end
   end
