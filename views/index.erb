@@ -47,8 +47,8 @@
   %>
 
   <div class="row">
-    <div class="span9 offset1">
-      <h4>Текущие значения:</h4><br />
+    <div class="span12 offset1">
+      <h4>Текущяя ситуация:</h4><br />
       <div class="span2">
         <div class="row">
           <small>Пыль &lt; 2.5 µm</small>
@@ -75,7 +75,6 @@
           <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
         </div>
       </div>
-      <div class="span2 divider-vertical"></div>
       <div class="span2">
         <div class="row">
           <small>Последний дождь</small>
@@ -84,17 +83,19 @@
           <h2><%= @rain.milimiters %></h2>
         </div>
         <div class="row">
-          <small>мм
+        <small>мм<% if @rain.is_falling %>, <span class="alert">идет сейчас</span><% end %>
             <br />
-            <code><%= @rain.started_at('%Y-%m-%d %H:%M').to_s + '/' + @rain.duration.to_s %></code>
+            <code><%= @rain.started_at('%Y-%m-%d').to_s + '/' + @rain.duration.to_s %></code>
           </small>
         </div>
       </div>
-      <% if @rain.is_falling %>
-      <div class="span2 alert">
-        Сейчас идет дождь.
+      <div class="span4">
+        После 10 сентября пыль растёт. Начиная с 13-го уровень находится в красной зоне (плохо). Будем надеяться, обещаный на выходные дождь помоет воздух, пока что можно посоветовать спортом поехать заниматься за город. 
+        &nbsp;
+        <small>15.09.2012</small>
+        <a href="https://twitter.com/vozduh_msk" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @vozduh_msk</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
       </div>
-    <% end %>
     </div>
   </div>
 
