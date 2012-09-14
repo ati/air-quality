@@ -1,7 +1,7 @@
 require 'exifr'
 
 class Potd
-  attr_accessor :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
+  attr_accessor :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
 
 
   def to_html
@@ -9,8 +9,9 @@ class Potd
   end
 
 
-  def find(d, span)
+  def find(d, span, preview=false)
     paths = []
+    @found_for = d
     case span 
       when :day
         #look today and yesterday
@@ -33,11 +34,12 @@ class Potd
     end
 
     images = []
+    re = (preview)? /\d+s\.jpg$/ : /\d+\.jpg$/
     d = [BASE_DIR, 'public', 'potd'].join(File::SEPARATOR)
     paths.each do |p|
       image_dir = [d,p].join(File::SEPARATOR)
       next unless File.exists?(image_dir)
-      images += Dir.entries(image_dir).grep(/\.jpg$/).map {|i| [p,i]}
+      images += Dir.entries(image_dir).grep(re).map {|i| [p,i]}
     end
 
     puts images.inspect

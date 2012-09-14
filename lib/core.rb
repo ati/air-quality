@@ -28,6 +28,10 @@ class Time
   def date_path
     strftime(%w(%Y %m %d).join(File::SEPARATOR))
   end
+
+  def now_msk
+    Time.at(Time.now.utc.to_i + TIME_OFFSET)
+  end
 end
 
 class Numeric

@@ -40,6 +40,13 @@ get '/' do
     @rain.find_last
     @d1_stat = Dc1100s_stat.where(:n_sensor => 1).first
     @d2_stat = Dc1100s_stat.where(:n_sensor => 2).first
+
+    @potds = []
+    (0..2).each do |d|
+      p = Potd.new
+      @potds << p if p.find(Time.now - d.days, :day, true)
+    end
+
     erb :index
 end
 
