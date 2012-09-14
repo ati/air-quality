@@ -111,6 +111,11 @@ def render_date(date, span)
 end
 
 
+get '/date/today' do
+  redirect '/date/' + Time.at(Time.now.utc + TIME_OFFSET).date_path
+end
+
+
 get '/date/:year' do
   render_date(make_date(params[:year], 1, 1), :year)
 end
