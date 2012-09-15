@@ -62,7 +62,14 @@
     <div class="span10">
       <h2><%= (spell_date @date, @span).capitalize %></h2>
       Описание необычайных и замечательных явлений в московской погоде.
+      <br />
+      <br />
       <% if !@potd.nil? %>
+      <img src="<%= @potd.t_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
+        &nbsp;&nbsp;
+      <img src="<%= @potd.p_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
+      <br />
+      <br />
       <div class="row well">
         <div class="span6">
           <%= @potd.to_html %>
@@ -79,10 +86,12 @@
           <div class="row">
             <br />
             <table class="table">
+              <% if !@potd.created_at.nil? %>
               <tr>
                 <td><b>Снято:</b></td>
                 <td><%= @potd.created_at %></td>
               </tr>
+              <% end %>
               <% if !@potd.description.nil? %>
               <tr>
                 <td><b>Описание:</b></td>
@@ -108,6 +117,9 @@
         </div>
       </div>
       <% end %>
+
+      <br />
+      <br />
 
       <div class="row">
         <div id="disqus_thread"></div>

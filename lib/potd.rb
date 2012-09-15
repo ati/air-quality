@@ -1,8 +1,11 @@
 require 'exifr'
 require 'yaml'
+require 'json'
+require 'net/http'
+require 'fileutils'
 
 class Potd
-  attr_accessor :description, :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
+  attr_accessor :t_url, :p_url, :description, :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
 
 
   def to_html
@@ -13,6 +16,8 @@ class Potd
   def find(d, span, preview=false)
     paths = []
     @found_for = d
+    load_tp(d)
+
     case span 
       when :day
         #look today and yesterday
@@ -36,16 +41,16 @@ class Potd
 
     images = []
     re = (preview)? /\d+s\.jpg$/ : /\d+\.jpg$/
-    d = [BASE_DIR, 'public', 'potd'].join(File::SEPARATOR)
+    dd = [BASE_DIR, 'public', 'potd'].join(File::SEPARATOR)
     paths.each do |p|
-      image_dir = [d,p].join(File::SEPARATOR)
+      image_dir = [dd,p].join(File::SEPARATOR)
       next unless File.exists?(image_dir)
       images += Dir.entries(image_dir).grep(re).map {|i| [p,i]}
     end
 
     if images.size > 0
       i = images.sample
-      load_info(([d] + i).join(File::SEPARATOR))
+      load_info(([dd] + i).join(File::SEPARATOR))
       @url = ['', 'potd', i[0], i[1]].join('/')
     else
       return nil
@@ -76,6 +81,42 @@ class Potd
         # error loading yml file.
         @description = 'invalid yml description file'
       end
+    end
+  end
+
+
+  def load_tp(d)
+    d_dir = [BASE_DIR, 'public', 'potd', d.date_path].join(File::SEPARATOR)
+    f = d_dir + File::SEPARATOR + 'tp.json'
+
+    tp = nil
+
+    if File.exists?(f)
+      begin
+        tp = JSON.parse(IO.read(f))
+      rescue Exception => e
+        puts "ERROR parsing json for '#{f}': " + e.message
+      end
+    end
+
+    # read fresh version of json file
+    now = Time.now.utc + TIME_OFFSET
+    if tp.nil? || ((now.to_i - tp['now'].to_i > 30.minutes) && Time.at(tp['a_ts'].to_i).between?(now - 7.days, now) ) # или вообще нет, или старше 30 минут для дат внутри последних 7 дней
+      begin
+        s = Net::HTTP.get( URI.parse 'http://ljsm.tautology2.net/weather/archive.php?ts=' + (d.to_i + TIME_OFFSET - 4.days).to_s)
+        tp = JSON.parse(s)
+        FileUtils.mkpath(d_dir)
+        File.open(f, 'w') do |outfile|
+          outfile.puts s
+        end
+      rescue Exception => e
+        puts "ERROR creating fresh tp_archive: " + e.message
+      end
+    end
+
+    if !tp.nil? && tp['status'].eql?('ok')
+      @t_url = tp['t']
+      @p_url = tp['p']
     end
   end
 
