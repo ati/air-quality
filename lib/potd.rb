@@ -1,7 +1,8 @@
 require 'exifr'
+require 'yaml'
 
 class Potd
-  attr_accessor :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
+  attr_accessor :description, :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
 
 
   def to_html
@@ -42,8 +43,6 @@ class Potd
       images += Dir.entries(image_dir).grep(re).map {|i| [p,i]}
     end
 
-    puts images.inspect
-
     if images.size > 0
       i = images.sample
       load_info(([d] + i).join(File::SEPARATOR))
@@ -64,6 +63,19 @@ class Potd
       ll = dms2dec(fe.gps_latitude_ref, fe.gps_latitude, fe.gps_longitude_ref, fe.gps_longitude )
       @lat = ll[0]
       @lon = ll[1]
+    end
+    # load values from description file if it exists
+    d_file = [File.dirname(f), File.basename(f, '.jpg').gsub(/\D/, '') + '.yml'].join(File::SEPARATOR)
+    if File.exists?(d_file)
+      begin
+        img_data = YAML::load_file(d_file)
+        @description = img_data['description']
+        @lat = img_data['gps']['lat'] unless img_data['gps']['lat'].nil?
+        @lon = img_data['gps']['lon'] unless img_data['gps']['lon'].nil?
+      rescue Exception => e
+        # error loading yml file.
+        @description = 'invalid yml description file'
+      end
     end
   end
 

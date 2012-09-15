@@ -83,6 +83,12 @@
                 <td><b>Снято:</b></td>
                 <td><%= @potd.created_at %></td>
               </tr>
+              <% if !@potd.description.nil? %>
+              <tr>
+                <td><b>Описание:</b></td>
+                <td><%= @potd.description %></td>
+              </tr>
+              <% end %>
               <!-- 
               <% if !@potd.camera.nil? %>
               <tr>
