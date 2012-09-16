@@ -16,7 +16,7 @@ class Potd
   def find(d, span, preview=false)
     paths = []
     @found_for = d
-    load_tp(d)
+    load_tp(d) unless preview
 
     case span 
       when :day
