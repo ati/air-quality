@@ -7,6 +7,7 @@
         <%= yield_content :stylesheets %>
         <script type="text/javascript" src="/js/jquery.min.js"></script>
         <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="http://vk.com/js/api/share.js?11" charset="windows-1251"></script>
         <%= yield_content :scripts %>
 
 		<script type="text/javascript">
@@ -15,12 +16,21 @@
 		  _gaq.push(['_setAccount', 'UA-34430453-1']);
 		  _gaq.push(['_trackPageview']);
 
+      // google analytics
 		  (function() {
 			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
 			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 		  })();
 
+      // facebook
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=375739648233";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
 		</script>
     </head>
     <body>
@@ -70,7 +80,14 @@
           <hr/>
           <div class="row">
             <div class="span9 offset2">
-              Воздух Москвы, 2012 г. &nbsp;&nbsp; <a href="/contacts">Контакты</a>
+              <table border="0" cellpadding="20"><tr valign="top"><td>
+                <script type="text/javascript"><!--
+                  document.write(VK.Share.button(false,{type: "round", text: "Share"}));
+                --></script>
+              </td>
+              <td>
+                <div class="fb-like" data-href="http://vozduh.msk.ru/" data-send="true" data-width="450" data-show-faces="true"></div>
+              </td></tr></table>
             </div>
           <div>
         </footer>
