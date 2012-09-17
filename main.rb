@@ -51,6 +51,18 @@ get '/' do
 end
 
 
+get '/texts/:article' do
+  article_name = params[:article].gsub(/\W/, '')
+  article_file = [BASE_DIR, 'views', 'texts', params[:article] + '.erb'].join(File::SEPARATOR)
+
+  if File.exists?(article_file)
+    erb :"texts/#{params[:article]}"
+  else
+    [404, 'Статья по имени "' + params[:article] + '" не найдена']
+  end
+end
+
+
 get '/methodology' do
   erb :methodology
 end

@@ -24,7 +24,6 @@
 		</script>
     </head>
     <body>
-      <div class="container">
         <header>
           <%
             current_date = Time.at(Time.now.utc.to_i + TIME_OFFSET)
@@ -61,15 +60,19 @@
           </div>
           </header>
   
+        <div class="container">
         <%= yield %>
         <!-- footer -->
-        <!--
+        </div>
         <footer>
-          <div class="row" style="position:fixed; bottom:0;">
-            http://vozduh.msk.ru, 2012.
+          <br />
+          <br />
+          <hr/>
+          <div class="row">
+            <div class="span9 offset2">
+              Воздух Москвы, 2012 г. &nbsp;&nbsp; <a href="/contacts">Контакты</a>
+            </div>
           <div>
         </footer>
-        -->
-      </div>
     </body>
 </html>
