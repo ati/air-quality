@@ -30,7 +30,7 @@ class Potd
 
       when :season
         #look anywhere in season
-        season = d.month.between(3,11)? Array(d.month..d.month+2) : [12,1,2]
+        season = d.month.between?(3,11)? Array(d.month..d.month+2) : [12,1,2]
         season.each do |sm|
           paths << [d.year, "%02d" % sm].join(File::SEPARATOR)
         end
