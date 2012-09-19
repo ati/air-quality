@@ -110,7 +110,7 @@ get '/data/dc1100.?:format?' do
         d = Dc1100.reverse_order(:measured_at).first
         "dust1:#{d.d1} dust2:#{d.d2} temp:#{d.t1} hum:#{d.h1} rain:#{d.rc}"
     else
-        @data = Dc1100.reverse_order(:measured_at).limit(24*60).all
+        @data = Dc1100.reverse_order(:measured_at).limit(30).all
         erb :dc1100
     end
 end
