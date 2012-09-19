@@ -135,11 +135,11 @@ get '/date/today' do
 end
 
 
-get '/date/:year' do
+get '/date/:year/?' do
   render_date(make_date(params[:year], 1, 1), :year)
 end
 
-get '/date/:year/:month' do
+get '/date/:year/:month/?' do
   seasons = ['spring', 'summer', 'autumn', 'winter']
   if seasons.include?(params[:month])
     d = make_date(params[:year], seasons.index(params[:month])*3 + 3, 1)
@@ -151,7 +151,7 @@ get '/date/:year/:month' do
   render_date(d, s)
 end
 
-get '/date/:year/:month/:day' do
+get '/date/:year/:month/:day/?' do
   render_date(make_date(params[:year], params[:month], params[:day]), :day)
 end
 
