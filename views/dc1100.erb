@@ -1,30 +1,38 @@
-<html><body>
-<img src="http://213.232.193.199/dust/dust_5m.png" width="581" height="252" />
-<br />
-(see also: <b><a href="https://cosm.com/feeds/72385">https://cosm.com/feeds/72385</a></b>)
-<br />
-<br />
-<table border=0>
-    <tr>
-        <th>Timestamp</th>
-        <th>Dust &lt; 2.5 um</th>
-        <th>Dust &gt; 2.5 um</th>
-        <th>Temperature</th>
-        <th>Humidity</th>
-        <th>Rain counter</th>
-        <th>Heater status</th>
-    </tr>
-
-    <% @data.each do |ds| %>
-    <tr>
-        <td><%= ds.ts_to_s() %></td>
-        <td><%= ds.d1 %></td>
-        <td><%= ds.d2 %></td>
-        <td><%= ds.t1 %></td>
-        <td><%= ds.h1 %></td>
-        <td><%= ds.rc %></td>
-        <td><%= (ds.hs == 0)? 'on' : 'off' %></td>
-    </tr>
-    <% end %>
-</table>
-</body></html>
+<div class="row">
+  <h3>Диагностическая информация о состоянии системы</h3>
+  Полный архив данных измерений доступен по адресу <a href="https://cosm.com/feeds/72385">https://cosm.com/feeds/72385</a>. 
+  <br />
+  Ниже приведены последние по времени <%= @data.size %> записей из этого архива.
+  <div class="span11">
+    <br />
+    <br />
+    <br />
+    <table class="table table-striped table-condensed table-hover table-bordered">
+      <thead>
+        <tr>
+            <th>Время</th>
+            <th>пыль &lt; 2.5 микрон</th>
+            <th>пыль &gt; 2.5 микрон</th>
+            <th>Tемпература, &deg;C</th>
+            <th>Влажность</th>
+            <th>Счетчик дождя</th>
+            <th>Нагреватель</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @data.each do |ds| %>
+        <tr>
+            <td><%= ds.ts_to_s() %></td>
+            <td><%= ds.d1 %></td>
+            <td><%= ds.d2 %></td>
+            <td><%= ds.t1 %></td>
+            <td><%= ds.h1 %></td>
+            <td><%= ds.rc %></td>
+            <td><%= (ds.hs == 0)? 'on' : 'off' %></td>
+        </tr>
+        <% end %>
+      </tbody>
+    </table>
+  
+  </div>
+</div>

@@ -110,7 +110,7 @@ get '/data/dc1100.?:format?' do
         d = Dc1100.reverse_order(:measured_at).first
         "dust1:#{d.d1} dust2:#{d.d2} temp:#{d.t1} hum:#{d.h1} rain:#{d.rc}"
     else
-        @data = Dc1100.reverse_order(:measured_at).limit(24*60).all
+        @data = Dc1100.reverse_order(:measured_at).limit(30).all
         erb :dc1100
     end
 end
@@ -135,11 +135,11 @@ get '/date/today' do
 end
 
 
-get '/date/:year' do
+get '/date/:year/?' do
   render_date(make_date(params[:year], 1, 1), :year)
 end
 
-get '/date/:year/:month' do
+get '/date/:year/:month/?' do
   seasons = ['spring', 'summer', 'autumn', 'winter']
   if seasons.include?(params[:month])
     d = make_date(params[:year], seasons.index(params[:month])*3 + 3, 1)
@@ -151,7 +151,7 @@ get '/date/:year/:month' do
   render_date(d, s)
 end
 
-get '/date/:year/:month/:day' do
+get '/date/:year/:month/:day/?' do
   render_date(make_date(params[:year], params[:month], params[:day]), :day)
 end
 
