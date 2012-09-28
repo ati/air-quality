@@ -2,3 +2,4 @@ db/*
 source_data/*
 .DS_Store
 public/potd
+tmp/
