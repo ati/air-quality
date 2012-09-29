@@ -24,8 +24,8 @@ require 'rain'
 # ip_meta = Ipgeobase.lookup('213.232.243.233')
 # #<Ipgeobase::IpMetaData:0x007fe2bb158790 @city="Москва", @country="RU", @region="Москва", @district="Центральный федеральный округ", @lat=55.755787, @lng=37.617634>"
 
-set :public_folder, 'public'
-set :static, true
+#set :public_folder, 'public'
+#set :static, true
 set :config, ParseConfig.new(File.dirname(__FILE__) + '/db/dust.config')
 set :clean_trace, true
 enable :sessions, :logging
