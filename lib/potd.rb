@@ -79,7 +79,7 @@ class Potd
         @lon = img_data['gps']['lon'] unless img_data['gps']['lon'].nil?
       rescue Exception => e
         # error loading yml file.
-        @description = 'invalid yml description file'
+        @description = "Invalid yml description file: #{e.message}"
       end
     end
   end
