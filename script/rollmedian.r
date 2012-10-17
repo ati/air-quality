@@ -4,12 +4,12 @@ base_dir = paste(Sys.getenv('HOME'), '/air-quality/', sep="")
 db_name = paste(base_dir, 'db/air_quality.sqlite3', sep="")
 dbh = dbConnect(SQLite(), db_name)
 
-sql = "select datetime(measured_at, 'unixepoch') as ts, d1 from dc1100s
+sql = "select measured_at, d1 from dc1100s
 where measured_at > strftime('%s', 'now') - 3*7*24*60*60
-order by id"
+order by measured_at"
 
 d = dbGetQuery(dbh, sql)
-dx = xts(d$d1, strptime(d$ts, '%Y-%m-%d %H:%M:%S'))
+dx = xts(d$d1, as.POSIXct(d$measured_at, origin="1970-01-01"))
 p = rollmedian(dx, 3001)
 
 #colors()[grep("green",colors())]
