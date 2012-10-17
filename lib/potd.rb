@@ -22,7 +22,7 @@ class Potd
       when :day
         #look today and yesterday
         paths << d.date_path
-        paths << Time.at(d.to_i - 24.hours).date_path
+        #paths << Time.at(d.to_i - 24.hours).date_path
 
       when :month
         #look anywhere in month
