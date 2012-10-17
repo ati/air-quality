@@ -88,7 +88,7 @@ get '/data/dust.csv' do
 
   csv_string = CSV.generate do |csv|
     csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm','дождь мм.']
-    air.each_with_index do |a,i|
+    air.reverse.each_with_index do |a,i|
       #r = rain.data_points[i][:count]
       csv << [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M'), 
         a[:d1].join(';'), a[:d2].join(';'), a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil] #r.eql?(0)? nil : r]
