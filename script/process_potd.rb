@@ -52,7 +52,8 @@ end
 
 def process_file(fn, description)
   exif = EXIFR::JPEG.new(fn)
-  d = exif.date_time || Time.parse(File.basename(fn, '.jpg'))
+  dt = exif.date_time_original rescue nil # look for original shot date
+  d = dt || exif.date_time || Time.parse(File.basename(fn, '.jpg'))
   dir = [IMG_BASE_DIR, d.year, "%02d" % d.month, "%02d" % d.day].join(File::SEPARATOR)
   FileUtils.mkpath(dir)
   n = save_potd(fn, dir)
