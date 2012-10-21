@@ -1,6 +1,8 @@
 require 'fileutils'
 require 'time'
 require 'logger'
+require 'digest/md5'
+require 'yaml'
 require 'parseconfig'
 require 'gmail'
 require 'exifr'
@@ -27,11 +29,6 @@ IMAGES = {
   '194x145' => 's',
 }
 
-def is_valid(a)
-  a.content_type.start_with?('image/jpeg') &&
-  a.filename.match(GOOD_FILENAME)
-end
-
 
 def next_filename(dir)
   (Dir.entries(dir).grep(GOOD_FILENAME).sort.last.to_i + 1).to_s
@@ -57,15 +54,15 @@ def process_file(fn, description)
   FileUtils.mkpath(dir)
   n = save_potd(fn, dir)
 
-  File.open(dir + "/#{n}.yml", "w+b", 0644) { |f| f.write(description + "\nsource_filename: #{fn}") }
+  File.open(dir + "/#{n}.yml", "w+b", 0644) { |f| f.write(description.to_yaml) }
   FileUtils.mv(fn, [IMG_ARCHIVE_DIR, File.basename(fn)].join(File::SEPARATOR))
 end
 
 
 def process_attachment(attachment, description)
-  LOGGER.info("processing '#{attachment.filename}'")
+  LOGGER.info("processing message_id='#{description[:message_id]}', #{attachment.filename}'")
 
-  fn = a.filename
+  fn = Digest::MD5.hexdigest(description[:message_id] + attachment.filename)
   if File.exists?([IMG_ARCHIVE_DIR, fn]*File::SEPARATOR)
     LOGGER.warn("file '#{fn}' found in the archive. possible duplicate, skipping.")
     return nil
@@ -73,7 +70,7 @@ def process_attachment(attachment, description)
 
   dfn = [TMP_DIR, fn]*File::SEPARATOR
   begin
-    File.open(dfn, "w+b", 0644) { |f| f.write a.body.decoded }
+    File.open(dfn, "w+b", 0644) { |f| f.write attachment.body.decoded }
     process_file(dfn, description)
 
   rescue Exception => e
@@ -90,16 +87,10 @@ def process_mail
       LOGGER.info("new mail from #{email.message.from}")
 
       if email.multipart?
-        description = ''
+        description = {:email_from => email.message.from, :message_id => email.message.message_id}
         email.parts.each do |part|
           if part.content_type.start_with?('text/plain')
-            description += part.decoded.sub(/--.*/m, '').strip
-            if !description.size.zero?
-              if !description.match(/^\w+:/) #not in yml format already
-                description = 'description: ' + description 
-              end
-            end
-            description += "\nemail_from: #{email.message.from}"
+            description[:description] = part.decoded.sub(/--.*/m, '').strip
 
           elsif part.content_type.start_with?('image/jpeg')
             process_attachment(part, description)
@@ -110,7 +101,7 @@ def process_mail
       else
         LOGGER.info("no attachments found. skipping this email.")
       end
-      #email.delete!
+      email.delete!
     end
   end
 end
@@ -119,11 +110,16 @@ end
 def process_folder(dir)
   Dir.entries(dir).grep(GOOD_FILENAME).each do |f|
     dfn = [dir, f]*File::SEPARATOR
-    process_file(dfn, '')
+    process_file(dfn, {:source_filename => dfn})
   end
 end
 
 
 ############################################
-process_mail() rescue LOGGER.error(__LINE__.to_s + ": error processing mail for #{CONFIG['gmail_login']}")
-process_folder(IMG_SRC_DIR) rescue LOGGER.error(__LINE__.to_s + ": error processing '#{IMG_SRC_DIR}'")
+begin
+	LOGGER.info("starting...")
+	process_mail()
+	process_folder(IMG_SRC_DIR)
+rescue Exception => e
+	LOGGER.error("caught exception processing potd: #{e.message}\n" + e.backtrace.join("\n"))
+end
