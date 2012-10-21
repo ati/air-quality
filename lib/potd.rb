@@ -61,7 +61,8 @@ class Potd
     fe = EXIFR::JPEG.new(f)
     @width = fe.width
     @height = fe.height
-    @created_at = fe.date_time.our_format
+    dt = fe.date_time_original rescue nil # look for original shot date
+    @created_at = (dt || fe.date_time).our_format
     @camera = fe.model
     @copyright = fe.copyright
     if !fe.gps_latitude_ref.nil?
