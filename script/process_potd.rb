@@ -21,7 +21,7 @@ IMG_BASE_DIR = [BASE_DIR, 'public', 'potd']*File::SEPARATOR
 IMG_ARCHIVE_DIR = [IMG_BASE_DIR, 'archive']*File::SEPARATOR
 IMG_SRC_DIR = [IMG_BASE_DIR, 'new']*File::SEPARATOR
 
-GOOD_FILENAME=/^\d{4}\D\d{2}\D\d{2}.*\.jpg$/
+GOOD_FILENAME=/^\w+\.jpg$/
 
 # dimensions => filename suffix
 IMAGES = {
