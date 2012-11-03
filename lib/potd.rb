@@ -76,11 +76,11 @@ class Potd
       begin
         img_data = YAML::load_file(d_file)
         @description = img_data['description']
-        @lat = img_data['gps']['lat'] unless img_data['gps']['lat'].nil?
-        @lon = img_data['gps']['lon'] unless img_data['gps']['lon'].nil?
+        @lat = img_data['gps']['lat'] unless img_data['gps'].nil?
+        @lon = img_data['gps']['lon'] unless img_data['gps'].nil?
       rescue Exception => e
         # error loading yml file.
-        @description = "Invalid yml description file: #{e.message}"
+        @description = "Invalid yml description file '#{d_file}': #{e.message}"
       end
     end
   end

@@ -33,6 +33,7 @@ enable :sessions, :logging
 set :default_encoding, 'utf-8'
 #Encoding.default_external = 'utf-8'
 #Encoding.default_internal = 'utf-8'
+set :erubis, :escape_html => true
 
 get '/' do
     @current = Dc1100.all.last

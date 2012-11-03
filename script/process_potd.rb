@@ -55,7 +55,7 @@ def process_file(fn, description)
   FileUtils.mkpath(dir)
   n = save_potd(fn, dir)
 
-  File.open(dir + "/#{n}.yml", "w+b", 0644) { |f| f.write(description.to_yaml) }
+  File.open(dir + "/#{n}.yml", "w+b", 0644) { |f| f.write({'description' => description['description']}.to_yaml) }
   FileUtils.mv(fn, [IMG_ARCHIVE_DIR, File.basename(fn)].join(File::SEPARATOR))
 end
 
@@ -91,7 +91,7 @@ def process_mail
         description = {:email_from => email.message.from, :message_id => email.message.message_id}
         email.parts.each do |part|
           if part.content_type.start_with?('text/plain')
-            description[:description] = part.decoded.sub(/--.*/m, '').strip
+            description['description'] = part.decoded.sub(/--.*/m, '').strip
 
           elsif part.content_type.start_with?('image/jpeg')
             process_attachment(part, description)
