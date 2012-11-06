@@ -25,7 +25,7 @@
     </script>
     <script type="text/javascript">
       function initialize_map() {
-        var photo_position = new google.maps.LatLng(<%= @potd.lat %>, <%= @potd.lon %>);
+        var photo_position = new google.maps.LatLng(<%= escape_html @potd.lat %>, <%= escape_html @potd.lon %>);
         var mapOptions = {
           center: photo_position,
           zoom: 13,
@@ -89,26 +89,26 @@
               <% if !@potd.created_at.nil? %>
               <tr>
                 <td><b>Снято:</b></td>
-                <td><%= @potd.created_at %></td>
+                <td><%= escape_html @potd.created_at %></td>
               </tr>
               <% end %>
               <% if !@potd.description.nil? %>
               <tr>
                 <td><b>Описание:</b></td>
-                <td><%= @potd.description %></td>
+                <td><%= escape_html @potd.description %></td>
               </tr>
               <% end %>
               <!-- 
               <% if !@potd.camera.nil? %>
               <tr>
                 <td><b>Камера:</b></td>
-                <td><%= @potd.camera %></td>
+                <td><%= escape_html @potd.camera %></td>
               </tr>
               <% end %>
               <% if !@potd.copyright.nil? %>
               <tr>
                 <td><b>Автор:</b></td>
-                <td><%= @potd.copyright %></td>
+                <td><%= escape_html @potd.copyright %></td>
               </tr>
               <% end %>
               -->
