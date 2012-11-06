@@ -85,10 +85,10 @@ end
 def process_mail
   Gmail.new(CONFIG['gmail_login'], CONFIG['gmail_pw']) do |gmail|
     gmail.inbox.emails.each do |email|
-      LOGGER.info("new mail from #{email.message.from}")
+      LOGGER.info("new mail from #{email.from}")
 
       if email.multipart?
-        description = {:email_from => email.message.from, :message_id => email.message.message_id}
+        description = {:email_from => email.from, :message_id => email.message_id}
         email.parts.each do |part|
           if part.content_type.start_with?('text/plain')
             description[:description] = part.decoded.sub(/--.*/m, '').strip
