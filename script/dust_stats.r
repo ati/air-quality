@@ -19,7 +19,7 @@ get_data <- function(q_type, n_sensor)
 get_quantiles <- function(n_sensor)
 {
   res = get_data('averages', n_sensor)
-  paste(round(quantile(res$d)), collapse=",")
+  paste(round(quantile(res$d, probs=seq(0,1,0.2))[-1]), collapse=",")
 }
 
 get_trend <- function(n_sensor)
@@ -37,4 +37,3 @@ for (sensor in 1:2)
   res = dbSendQuery(dbh, paste("update dc1100s_stats set trend=", t, ", quantiles='", q, "' where n_sensor=", sensor, sep=""))
   dbClearResult(res)
 }
-

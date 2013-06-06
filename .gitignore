@@ -4,3 +4,4 @@ source_data/*
 public/potd
 tmp/
 public/img/weekly_filtered.png
+doc/*
