@@ -3,3 +3,4 @@ source_data/*
 .DS_Store
 public/potd
 tmp/
+public/img/weekly_filtered.png

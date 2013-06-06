@@ -36,7 +36,7 @@ set :default_encoding, 'utf-8'
 set :erubis, :escape_html => true
 
 get '/' do
-    @current = Dc1100.all.last
+    @current = Dc1100.order(:id).last
     @rain = Rain.new #recent
     @rain.find_last
     @d1_stat = Dc1100s_stat.where(:n_sensor => 1).first
@@ -88,11 +88,11 @@ get '/data/dust.csv' do
   rain.set_range(from, to)
 
   csv_string = CSV.generate do |csv|
-    csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm','дождь мм.']
+    csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm'] #,'дождь мм.']
     air.reverse.each_with_index do |a,i|
       #r = rain.data_points[i][:count]
       csv << [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M'), 
-        a[:d1].join(';'), a[:d2].join(';'), a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil] #r.eql?(0)? nil : r]
+        a[:d1].join(';'), a[:d2].join(';') ]#, a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil] #r.eql?(0)? nil : r]
     end
   end
 
