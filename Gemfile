@@ -1,0 +1,11 @@
+source 'https://rubygems.org'
+
+gem 'sinatra'
+gem 'sinatra-reloader'
+gem 'sinatra-content-for2'
+gem 'rack_csrf'
+gem 'parseconfig'
+gem 'sequel'
+gem 'sqlite3'
+gem 'prowler'
+gem 'exifr'

@@ -1,7 +1,7 @@
 require 'sequel'
 require 'json'
 
-DB = Sequel.sqlite(Dir.pwd + '/db/air_quality.sqlite3')
+DB = Sequel.sqlite(File.join(BASE_DIR, 'db', 'air_quality.sqlite3'))
 TIME_OFFSET = 4*60*60
 
 class City < Sequel::Model
@@ -94,6 +94,7 @@ class Dc1100 < Sequel::Model
     end
 end
 
+
 class Dc1100s_stat < Sequel::Model
 
 
@@ -124,4 +125,7 @@ class Dc1100s_stat < Sequel::Model
     return 1 if trend > 0
     return -1
   end
+end
+
+class Rollmedian < Sequel::Model
 end

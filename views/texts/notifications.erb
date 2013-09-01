@@ -1,0 +1,73 @@
+
+<% 
+  status = params['status'].to_s.eql?('ok') ? :success : :error
+  if status.eql?(:success)
+    alert_class = 'alert-success'
+    status_message = 'Ваши настройки успешно сохранены'
+  else
+    alert_class = 'alert-error'
+    status_message = case params['message'].to_i
+                     when 1
+                       'Неверный API ключ'
+                     when 2
+                       'вас не было (и нет) в нашей базе'
+                     else
+                       'Что-то пошло (или не пошло) не так. Что именно -- непонятно.'
+                     end
+  end
+%>
+
+<% if status = params['status'].to_s %>
+<div class="row">
+  <span class="span7">
+    <div class="alert <%= alert_class %>">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      <%= status_message %>
+    </div>
+  </span>
+</div>
+<% end %>
+
+<div class="row">
+  <div class="span7">
+    <legend>Оповещение о воздушных движениях</legend>
+      Вы можете получать оповещения о повышенном и пониженном уровне пыли, а также о начале дождя с помощью приложений <a href="http://prowlapp.com/">prowl</a> (для iOS) и <a href="http://www.notifymyandroid.com/">notify my android</a> (для Android-a)
+      Для этого нужно установить на свой телефон соответствующее приложение, <a href="https://www.prowlapp.com/api_settings.php">получить на сайте</a> "ключ приложения" (API key) и ввести его в формочку.
+      <br />
+      Для того, чтобы отключить оповещения, сбросьте галочки для всех настроек и введите свой API key.
+  </div>
+</div>
+
+<br />
+
+<div class="row">
+  <div class="span6">
+    <form  method="POST" action="/actions/notifications">
+      <%= Rack::Csrf.csrf_tag(env) %>
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" name="pm25" value="1" /> Смена уровней PM2.5
+          </label>
+        </div>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" name="rain_start" value="1" /> Начало дождя
+          </label>
+        </div>
+      </div>
+
+      <br />
+      <div class="control-group">
+        <div class="controls">
+          <input type="text" class="input-xlarge" id="input_api_key" name="api_key" placeholder="API key" />
+        </div>
+        <br />
+        <div class="controls">
+          <button type="submit" class="btn input-xxlarge">Сохранить настройки оповещений</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
