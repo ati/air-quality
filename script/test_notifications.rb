@@ -108,7 +108,7 @@ begin
     end
   end
 
-  p = Prowl[1]
+  p = Prowl[2]
   p.notify('Пыль', 'Тестовое длинное сообщение.')
 
 end

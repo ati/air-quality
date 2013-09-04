@@ -1,10 +1,11 @@
 # encoding: utf-8
-require 'rubygems'
 
-require 'sinatra'
+BASE_DIR = File.dirname(__FILE__)
+$LOAD_PATH << BASE_DIR + '/lib'
+
 require 'sinatra/reloader' if development?
 require 'sinatra/content_for'
-# use Rack::CommonLogger
+require 'sinatra/form_helpers'
 require 'rack/csrf'
 require 'logger'
 
@@ -14,14 +15,14 @@ require 'sequel'
 require 'parseconfig'
 require 'exifr'
 
-BASE_DIR = File.dirname(__FILE__)
-$LOAD_PATH << BASE_DIR + '/lib'
 require 'core'
 require 'potd'
 require 'models'
 require 'rain'
+require 'prowl'
 
 class Vozduh < Sinatra::Application
+  helpers Sinatra::FormHelpers
 
   get '/' do
       @current = Dc1100.order(:id).last
@@ -41,8 +42,11 @@ class Vozduh < Sinatra::Application
 
 
   get '/texts/:article' do
-    article_name = params[:article].gsub(/\W/, '')
-    article_file = [BASE_DIR, 'views', 'texts', params[:article] + '.erb'].join(File::SEPARATOR)
+    article_file = [BASE_DIR, 'views', 'texts', params[:article].gsub(/\W/, '') + '.erb'].join(File::SEPARATOR)
+    # если есть параметры из редиректа, включить их сюда
+    if params['status'] && session[:prowl]
+      params['prowl'] = eval(session[:prowl]) # хэш сохранен с помощью to_s, десериализуется эвалом
+    end
 
     if File.exists?(article_file)
       erb :"texts/#{params[:article]}"
@@ -86,6 +90,34 @@ class Vozduh < Sinatra::Application
 
     csv_string
   end
+
+  # сохранить настройки оповещений
+  post '/actions/notifications' do
+    posted_prowl = params['prowl']
+
+    if posted_prowl.nil?
+      redirect_url = "/texts/notifications?status=error&message=3"
+
+    else
+      prowl = Prowl.find(api_key: posted_prowl['api_key'].to_s) || Prowl.new(api_key: posted_prowl['api_key'].to_s)
+      prowl.do_rain = posted_prowl['do_rain'].to_i
+      prowl.do_dust = posted_prowl['do_dust'].to_i
+
+      if prowl.valid?
+        prowl.save
+        status = 'ok'
+        message = ''
+      else
+        status = 'error'
+        message = prowl.errors[:api_key].first
+      end
+
+      session['prowl'] = posted_prowl.to_s
+      redirect_url = "/texts/notifications?status=#{status}&message=#{message}"
+    end
+    redirect redirect_url
+  end
+
 
   post '/data/dc1100' do
       protected!
@@ -210,6 +242,7 @@ class Vozduh < Sinatra::Application
     use Rack::Session::Cookie, :secret => settings.config['csrf_entropy']
     use Rack::Csrf, :raise => true
     set :clean_trace, true
+    enable :sessions
 
     Dir.mkdir('logs') unless File.exist?('logs')
 

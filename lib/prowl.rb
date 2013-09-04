@@ -1,21 +1,59 @@
 # encoding: utf-8
 require 'prowler'
+require 'ruby-notify-my-android'
 
 class Prowl < Sequel::Model
-  
-  APP_NAME = 'vozduh.msk.ru'
-  RAINS = %w(слабый средний сильный)
+  plugin :after_initialize
 
-  def validate
-    pr = Prowler.new(application: APP_NAME, apikey: api_key.to_s)
-    Prowler.verify_certificate = false
-    pr.verify('api_key')
+  APP_NAME = 'vozduh.msk.ru'
+  NMA_API_KEY_LENGTH = 48
+
+  @notifier = nil
+
+  def after_initialize
+    @notifier = api_key.length.eql?(NMA_API_KEY_LENGTH) ? NMA : Prowler
+    if @notifier.eql?(Prowler)
+      Prowler.verify_certificate = false
+    end
   end
 
+  def validate
+    super
+    begin
+      @notifier.eql?(Prowler) ? 
+        Prowler.new(application: APP_NAME, api_key: api_key).verify :
+        NMA.valid_key?(api_key)
+
+    rescue Exception => e
+      LOGGER.error(e.message)
+      LOGGER.error(e.backtrace.inspect)
+      errors.add(:api_key, 3)
+      return false
+    end
+  end
+
+
   def notify(facility, message)
-    pr = Prowler.new(application: APP_NAME, api_key: api_key)
-    Prowler.verify_certificate = false
-    pr.notify(facility, message)
+    raise "undefined notifier" if @notifier.is_a?(NilClass)
+
+    begin
+      if @notifier.eql?(Prowler)
+        Prowler.new(application: APP_NAME, api_key: api_key).notify(facility, message)
+      else
+        NMA.notify do |n|
+          n.apikey = api_key,
+          n.priority = NMA::Priority::MODERATE
+          n.application = APP_NAME
+          n.event = facility
+          n.description = message
+        end
+      end
+      return true
+    rescue Exception => e
+      LOGGER.error(e.message)
+      LOGGER.error(e.backtrace.inspect)
+      return false
+    end
   end
 
 
