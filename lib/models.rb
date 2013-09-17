@@ -127,5 +127,77 @@ class Dc1100s_stat < Sequel::Model
   end
 end
 
+
+
+Sequel::Model.dataset_module do 
+  def xvalid?
+    count >= model::REQUIRED_SAMPLES
+  end
+end
+
+
+
 class Rollmedian < Sequel::Model
+  REQUIRED_SAMPLES = 1000
+end
+
+
+
+class Rainsum < Sequel::Model
+  REQUIRED_SAMPLES = 24*60
+  SINGLE_RAIN_TIMEOUT = 30*60
+  MINIMAL_RAIN_DURATION = 5*60
+  SAMPLES_TO_MILIMITERS = 36.4
+
+  def at
+    Sequel.string_to_datetime(self.row_names)
+  end
+
+  def rc
+    self.V1
+  end
+end
+
+
+
+Rainsum.dataset_module do
+
+  def rains
+    res = []
+    current_rain = {}
+
+    order(:row_names).each do |rain_sample|
+      if current_rain[:from].nil? && rain_sample.rc > 0
+        current_rain.merge!({
+          from: rain_sample.at,
+          size: rain_sample.rc,
+          last: rain_sample.at
+        })
+
+      elsif !current_rain[:from].nil? && rain_sample.rc == 0
+        if rain_sample.at - current_rain[:last] > Rainsum::SINGLE_RAIN_TIMEOUT
+          current_rain[:to] = current_rain[:last]
+
+          if current_rain[:to] - current_rain[:from] > Rainsum::MINIMAL_RAIN_DURATION
+            current_rain.delete(:last)
+            res << current_rain.clone
+          end
+
+          current_rain = {}
+        end
+
+      elsif !current_rain[:from].nil? && rain_sample.rc > 0
+        current_rain[:last] = rain_sample.at
+        current_rain[:size] += rain_sample.rc
+      end
+
+    end
+
+    if !current_rain[:from].nil? && (Time.now > current_rain[:from] - Rainsum::MINIMAL_RAIN_DURATION)
+      res << current_rain.clone
+      current_rain = {}
+    end
+
+    res
+  end
 end
