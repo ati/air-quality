@@ -11,5 +11,6 @@ Sequel.migration do
       DateTime :dust_at
     end
     add_index :prowls, :api_key
+    run "INSERT INTO dc1100s_stats(trend, quantiles, n_sensor) VALUES(0, '{:from=>nil, :to=>nil, :size=>nil}', 3)"
   end
 end

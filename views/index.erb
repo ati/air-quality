@@ -80,26 +80,24 @@
           <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
         </div>
       </div>
+      <% if ! @rain.from.nil? %>
       <div class="span2">
         <div class="row">
           <small>Последний дождь</small>
         </div>
         <div class="row">
-          <h2><%= @rain.milimiters %></h2>
+          <h2><%= "%.2f" % @rain.mm %></h2>
         </div>
         <div class="row">
-        <small>мм<% if @rain.is_falling %>, <span class="alert">идет сейчас</span><% end %>
+        <small>мм<% if @rain.to.nil? %>, <span class="alert">идет сейчас</span><% end %>
             <br />
-            <code><%= @rain.started_at('%Y-%m-%d').to_s + '/' + @rain.duration.to_s %></code>
+            <code><%= @rain.from.strftime('%Y-%m-%d') + '/' + @rain.duration.to_i.duration %></code>
           </small>
         </div>
       </div>
+      <% end %>
       <div class="span4">
-        После 10 сентября пыль растёт. Начиная с 13-го уровень находится в красной зоне (плохо). Будем надеяться, обещаный на выходные дождь помоет воздух, пока что можно посоветовать спортом поехать заниматься за город. 
-        &nbsp;
-        <small>15.09.2012</small>
-        <a href="https://twitter.com/vozduh_msk" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @vozduh_msk</a>
-        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+        <strong>2013-09-18</strong>. Внезапно я снова занимаюсь этим сайтом. В ближайших планах: отправка оповещений о пыли и дожде на мобильник, возвращение графиков дождя в новом красивом виде, достойное отображение "картинки дня" на главной странице. Спасибо, что заглядываете!
       </div>
   </div>
 

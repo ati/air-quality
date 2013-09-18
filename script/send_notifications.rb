@@ -16,7 +16,6 @@ require 'models'
 require 'prowl'
 
 
-PM25_SENSOR = 1
 DUST_NOTIFICATION_TIME = 6.hours
 REQUIRED_MEDIAN_SAMPLES = 1000
 
@@ -28,7 +27,7 @@ class DustAnnouncer
   SPAM_PROTECTION_INTERVAL = 60.minutes
   
   def self.prowls
-    Prowl.where(do_rain: 1).where{dust_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
+    Prowl.where(do_dust: 1).where{dust_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
   end
 
   def self.notify(n, direction)
@@ -37,6 +36,25 @@ class DustAnnouncer
       prowls.each do |p|
         p.notify('Пыль', message)
       end
+    end
+  end
+end
+
+
+
+class RainAnnouncer
+  SPAM_PROTECTION_INTERVAL = 60.minutes
+  TIME_FORMAT = '%H:%M'
+  
+  def self.prowls
+    Prowl.where(do_rain: 1).where{rain_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
+  end
+
+  def self.notify(ts, has_started?, mm=nil)
+    size =  mm.to_i > 0 ? " Выпало %.2f mm осадков." % mm : ''
+    message = "В #{ts.strftime(TIME_FORMAT)} #{has_started? ? "начался" : "закончился"} дождь.#{size}"
+    prowls.each do |p|
+      p.notify('Дождь', message)
     end
   end
 end
@@ -86,24 +104,46 @@ class Quantile
 end
 
 
-
-begin
-	LOGGER.info("starting...")
-
-  if !DB.table_exists?(:rollmedians)
-    LOGGER.warn("Table 'rollmedians' does not exists. Aborting.")
-    exit(1)
-  end
-
-  pm25 = Dc1100s_stat.where(n_sensor: PM25_SENSOR).first
+def what_about_dust?
+  pm25 = Dc1100s_stat.where(n_sensor: Dc110s_stat::PM25_SENSOR).first
   subset = Rollmedian.where{row_names > Time.now - DUST_NOTIFICATION_TIME}
   quantile = Quantile.new(pm25)
 
   # ничего не делать, если недостаточно записей в табличке средних
-  if subset.count > REQUIRED_MEDIAN_SAMPLES
+  if subset.xvalid?
     quantile.analyze_trend(subset.max(:V1), subset.min(:V1))
   else
     LOGGER.warn("Not enough median samples.")
   end
+end
+
+
+def what_about_rain?
+  r_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
+  subset = Rainsum.where{row_names > Time.now - RAIN_NOTIFICATION_TIME}
+  if subset.xvalid?
+    last_rain = subset.rains.last
+    if changes = r_stat.rain.compare_to(last_rain)
+      RainAnnouncer.notify(changes)
+    end
+    r_stat.rain = last_rain
+    r_stat.save
+  else
+    LOGGER.warn("Not enough median samples.")
+  end
+end
+
+
+begin
+	LOGGER.info("starting...")
+
+  [:rollmedians, :rainsums].each do |table|
+  if !DB.table_exists?(table) 
+    LOGGER.warn("Table '#{table}' does not exists. Aborting.")
+    exit(1)
+  end
+
+  what_about_dust?
+  what_about_rain?
 
 end

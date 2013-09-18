@@ -18,7 +18,6 @@ require 'exifr'
 require 'core'
 require 'potd'
 require 'models'
-require 'rain'
 require 'prowl'
 
 class Vozduh < Sinatra::Application
@@ -26,10 +25,10 @@ class Vozduh < Sinatra::Application
 
   get '/' do
       @current = Dc1100.order(:id).last
-      @rain = Rain.new #recent
-      @rain.find_last
-      @d1_stat = Dc1100s_stat.where(:n_sensor => 1).first
-      @d2_stat = Dc1100s_stat.where(:n_sensor => 2).first
+      @d1_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first
+      @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first
+      @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
+      @rain = Rain.from_s(@rain_stat.quantiles)
 
       @potds = []
       (0..2).each do |d|
@@ -76,15 +75,12 @@ class Vozduh < Sinatra::Application
     from = to - 2.days
 
     air = Dc1100.deviations_range(from, to)
-    rain = Rain.new
-    rain.set_range(from, to)
 
     csv_string = CSV.generate do |csv|
       csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm'] #,'дождь мм.']
       air.reverse.each_with_index do |a,i|
-        #r = rain.data_points[i][:count]
         csv << [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M'), 
-          a[:d1].join(';'), a[:d2].join(';') ]#, a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil] #r.eql?(0)? nil : r]
+          a[:d1].join(';'), a[:d2].join(';') ]#, a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil]
       end
     end
 
@@ -238,16 +234,22 @@ class Vozduh < Sinatra::Application
 
 
   configure do
-    set :config, ParseConfig.new(File.dirname(__FILE__) + '/db/dust.config')
-    use Rack::Session::Cookie, :secret => settings.config['csrf_entropy']
+    set :config, ParseConfig.new(BASE_DIR + '/db/dust.config')
+    use Rack::Session::Cookie, secret: settings.config['csrf_entropy']
     use Rack::Csrf, :raise => true
     set :clean_trace, true
+    set :environment, settings.config['VOZDUH_ENV'].to_sym
     enable :sessions
+    
+    if development?
+      register Sinatra::Reloader
+      also_reload BASE_DIR + '/lib/models.rb'
+    end
 
     Dir.mkdir('logs') unless File.exist?('logs')
 
     $logger = Logger.new('logs/common.log','weekly')
-    $logger.level = Logger::WARN
+    $logger.level = Logger::DEBUG
 
     # Spit stdout and stderr to a file during production
     # in case something goes wrong
