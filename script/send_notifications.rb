@@ -16,11 +16,6 @@ require 'models'
 require 'prowl'
 
 
-DUST_NOTIFICATION_TIME = 6.hours
-REQUIRED_MEDIAN_SAMPLES = 1000
-
-
-
 ############################################
 
 class DustAnnouncer
@@ -50,9 +45,9 @@ class RainAnnouncer
     Prowl.where(do_rain: 1).where{rain_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
   end
 
-  def self.notify(ts, has_started?, mm=nil)
+  def self.notify(ts, has_started, mm=nil)
     size =  mm.to_i > 0 ? " Выпало %.2f mm осадков." % mm : ''
-    message = "В #{ts.strftime(TIME_FORMAT)} #{has_started? ? "начался" : "закончился"} дождь.#{size}"
+    message = "В #{ts.strftime(TIME_FORMAT)} #{has_started ? "начался" : "закончился"} дождь.#{size}"
     prowls.each do |p|
       p.notify('Дождь', message)
     end
@@ -105,31 +100,31 @@ end
 
 
 def what_about_dust?
-  pm25 = Dc1100s_stat.where(n_sensor: Dc110s_stat::PM25_SENSOR).first
-  subset = Rollmedian.where{row_names > Time.now - DUST_NOTIFICATION_TIME}
+  pm25 = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first
+  subset = Rollmedian.where{row_names > Time.now - 1.5*60*Rollmedian::REQUIRED_SAMPLES}
   quantile = Quantile.new(pm25)
 
   # ничего не делать, если недостаточно записей в табличке средних
   if subset.xvalid?
     quantile.analyze_trend(subset.max(:V1), subset.min(:V1))
   else
-    LOGGER.warn("Not enough median samples.")
+    LOGGER.warn("Not enough median samples: #{subset.count}.")
   end
 end
 
 
 def what_about_rain?
   r_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
-  subset = Rainsum.where{row_names > Time.now - RAIN_NOTIFICATION_TIME}
+  subset = Rainsum.where{row_names > Time.now - 1.5*60*Rainsum::REQUIRED_SAMPLES}
   if subset.xvalid?
     last_rain = subset.rains.last
     if changes = r_stat.rain.compare_to(last_rain)
-      RainAnnouncer.notify(changes)
+      RainAnnouncer.notify(changes.push(last_rain.mm))
     end
     r_stat.rain = last_rain
     r_stat.save
   else
-    LOGGER.warn("Not enough median samples.")
+    LOGGER.warn("Not enough rain samples: #{subset.count}.")
   end
 end
 
@@ -138,9 +133,10 @@ begin
 	LOGGER.info("starting...")
 
   [:rollmedians, :rainsums].each do |table|
-  if !DB.table_exists?(table) 
-    LOGGER.warn("Table '#{table}' does not exists. Aborting.")
-    exit(1)
+	  if !DB.table_exists?(table) 
+		LOGGER.warn("Table '#{table}' does not exists. Aborting.")
+		exit(1)
+	  end
   end
 
   what_about_dust?
