@@ -9,3 +9,4 @@ This is a code, that powers [Vozduh (russian for "air")](http://vozduh.msk.ru/) 
 - R script for statistics calculation (script/dust_stats.r)
 
 Deploy: git push production master
+Start: unicorn -c /home/ati/air-quality/unicorn.rb -E production -D

@@ -235,8 +235,13 @@ class Vozduh < Sinatra::Application
 
   configure do
     set :config, ParseConfig.new(BASE_DIR + '/db/dust.config')
+
+    Dir.mkdir('logs') unless File.exist?('logs')
+    $logger = Logger.new('logs/common.log','weekly')
+    $logger.level = Logger::DEBUG
+
     use Rack::Session::Cookie, secret: settings.config['csrf_entropy']
-    use Rack::Csrf, :raise => true
+    use Rack::Csrf, skip: %w(POST:/data/dc1100)
     set :clean_trace, true
     set :environment, settings.config['VOZDUH_ENV'].to_sym
     enable :sessions
@@ -245,11 +250,6 @@ class Vozduh < Sinatra::Application
       register Sinatra::Reloader
       also_reload BASE_DIR + '/lib/models.rb'
     end
-
-    Dir.mkdir('logs') unless File.exist?('logs')
-
-    $logger = Logger.new('logs/common.log','weekly')
-    $logger.level = Logger::DEBUG
 
     # Spit stdout and stderr to a file during production
     # in case something goes wrong
