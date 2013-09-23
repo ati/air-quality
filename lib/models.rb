@@ -197,8 +197,10 @@ class Rain
   def self.from_s(s)
     r = Rain.new
     fields = eval(s)
-    r.from = fields[:from].nil? ? nil : Time.parse(fields[:from])
-    r.to = fields[:to].nil? ? nil : Time.parse(fields[:to])
+    from = fields[:from]
+    to = fields[:to]
+    r.from = (from.nil? || from.empty?) ? nil : Time.parse(from)
+    r.to = (to.nil? || to.empty?) ? nil : Time.parse(to)
     r.size = fields[:size].nil? ? nil : fields[:size].to_i
     return r
   end
