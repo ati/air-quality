@@ -4,11 +4,11 @@ BASE_DIR = File.expand_path('../..', __FILE__)
 require 'time'
 require 'date'
 require 'logger'
-# require 'parseconfig'
+require 'parseconfig'
 
-# CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
 LOGGER = Logger.new(STDOUT) # BASE_DIR + '/tmp/potd_import.log')
-LOGGER.level = Logger::DEBUG
+LOGGER.level = (CONFIG['VOZDUH_ENV'] && CONFIG['VOZDUH_ENV'].to_sym.eql?(:production)) ? Logger::WARN : Logger::DEBUG
 
 $LOAD_PATH << BASE_DIR + '/lib'
 require 'core'
@@ -81,6 +81,8 @@ class Quantile
     # в других случаях ничего не сообщаем
     if max_median_q.eql?(min_median_q)
       announce_trend(max_median_q)
+    else
+      LOGGER.debug("same dust level, no new announcements.")
     end
   end
 
@@ -90,6 +92,7 @@ class Quantile
     # в случае повторного запуска с теми же параметрами
     #
     if ! @pm25.announced_quantile.eql?(current_quantile)
+      LOGGER.debug("announcing new dust level: #{current_quantile}")
       @pm25.update(announced_quantile: current_quantile)
     end
 
@@ -101,7 +104,7 @@ end
 
 def what_about_dust?
   pm25 = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first
-  subset = Rollmedian.where{row_names > Time.now - 1.5*60*Rollmedian::REQUIRED_SAMPLES}
+  subset = Rollmedian.where{row_names > Time.now - 2.days}
   quantile = Quantile.new(pm25)
 
   # ничего не делать, если недостаточно записей в табличке средних
@@ -115,14 +118,21 @@ end
 
 def what_about_rain?
   r_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
-  subset = Rainsum.where{row_names > Time.now - 1.5*60*Rainsum::REQUIRED_SAMPLES}
+  subset = Rainsum.where{row_names > Time.now - 2.days}
   if subset.xvalid?
-    last_rain = subset.rains.last
-    if changes = r_stat.rain.compare_to(last_rain)
-      RainAnnouncer.notify(changes.push(last_rain.mm))
+    if last_rain = subset.rains.last
+      LOGGER.debug("last_rain: #{last_rain.inspect}, r_stat: #{r_stat.rain.inspect}")
+      if changes = r_stat.rain.compare_to(last_rain)
+        LOGGER.debug('sending rain notifications: ' + changes.inspect)
+        RainAnnouncer.notify(changes.push(last_rain.mm))
+      else
+        LOGGER.debug('no new rain events to announce')
+      end
+      r_stat.rain = last_rain
+      r_stat.save
+    else
+      LOGGER.debug("can't find last rain in valid subset")
     end
-    r_stat.rain = last_rain
-    r_stat.save
   else
     LOGGER.warn("Not enough rain samples: #{subset.count}.")
   end

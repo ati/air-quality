@@ -167,7 +167,7 @@ class Rain
   def duration
     return nil if from.nil?
     ended_at = to.nil? ? Time.now : to
-    return from - ended_at
+    return ended_at - from
   end
 
   def started?
@@ -260,7 +260,7 @@ Rainsum.dataset_module do
         current_rain.last = rain_sample.at
         current_rain.size += rain_sample.rc
 
-      elsif !current_rain.started? && rain_sample.rc == 0
+      elsif current_rain.started? && rain_sample.rc == 0
         if rain_sample.at - current_rain.last > Rain::SINGLE_RAIN_TIMEOUT
           current_rain.to = current_rain.last
           if current_rain.valid?
@@ -268,8 +268,8 @@ Rainsum.dataset_module do
           end
           current_rain = Rain.new
         end
-
       end
+
     end
 
     if current_rain.valid?
