@@ -16,3 +16,7 @@ gem 'exifr'
 # отправка нотификаций на мобильники
 gem 'prowler'
 gem 'ruby-notify-my-android'
+
+# potd
+gem 'gmail'
+gem 'mini_magick'
