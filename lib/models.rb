@@ -222,7 +222,8 @@ class Rain
         return (Time.now - to < 3*SINGLE_RAIN_TIMEOUT) ? [to, false] : false
 
       else
-        $logger.info("LOOK, me=#{self.to_s}, last_rain = #{last_rain.to_s}")
+        (LOGGER || $logger).info("LOOK, me=#{self.to_s}, last_rain = #{last_rain.to_s}")
+		return false
       end
     end
   end

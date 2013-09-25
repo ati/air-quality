@@ -17,7 +17,9 @@ base_dir = ifelse(is_interactive,
 )
 
 db_name = paste(base_dir, '/db/air_quality.sqlite3', sep="")
-dbh = dbConnect(SQLite(), db_name)
+# print(args)
+# print(db_name)
+dbh = dbConnect(SQLite(), db_name, flags = SQLITE_RO)
 
 PAST_TIME = 3*7*24*60*60
 MEDIAN_DUST_TABLE = "rollmedians"
@@ -35,12 +37,15 @@ update_roll <- function()
   rain_ts = xts(clear_rain, as.POSIXct(head(d$measured_at, -1), origin="1970-01-01"))
   dust_rollmed = rollmedian(dust_ts, 3001, fill=c("extend", "extend", "extend"))
   # rain_rollsum = rollapply(rain_ts, 5, sum, fill=c("extend", "extend", "extend"))
-                         
-  save_roll(MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed))
-  save_roll(SUM_RAIN_TABLE, as.data.frame(rain_ts))
+
+  dbDisconnect(dbh)
+  
+  dbh_write = dbConnect(SQLite(), db_name)                       
+  save_roll(dbh_write, MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed))
+  save_roll(dbh_write, SUM_RAIN_TABLE, as.data.frame(rain_ts))
 }
 
-save_roll <- function(table_name, dataset)
+save_roll <- function(dbh, table_name, dataset)
 {
   if (dbExistsTable(dbh, table_name)) {dbRemoveTable(dbh, table_name)}
   dbWriteTable(dbh, table_name, as.data.frame(dataset))

@@ -35,19 +35,23 @@ class Prowl < Sequel::Model
 
   def notify(facility, message)
     raise "undefined notifier" if @notifier.is_a?(NilClass)
+	facility_name = { rain: 'Дождь', dust: 'Пыль'}
 
     begin
       if @notifier.eql?(Prowler)
-        Prowler.new(application: APP_NAME, api_key: api_key).notify(facility, message)
+        Prowler.new(application: APP_NAME, api_key: api_key).notify(facility_name[facility], message)
       else
         NMA.notify do |n|
           n.apikey = api_key,
           n.priority = NMA::Priority::MODERATE
           n.application = APP_NAME
-          n.event = facility
+          n.event = facility_name[facility]
           n.description = message
         end
       end
+	  ts_key = "#{facility}_at".to_s
+	  self[ts_key] = Time.now
+	  save
       return true
     rescue Exception => e
       LOGGER.error(e.message)
