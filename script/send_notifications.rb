@@ -22,14 +22,14 @@ class DustAnnouncer
   SPAM_PROTECTION_INTERVAL = 60.minutes
   
   def self.prowls
-    Prowl.where(do_dust: 1).where{dust_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
+    Prowl.where(do_dust: 1).where{dust_at + SPAM_PROTECTION_INTERVAL < Time.now}
   end
 
   def self.notify(n, direction)
     if ! direction.eql?(0)
       message = "Уровень пыли #{direction > 0 ? "повысился" : "понизился"} до класса #{n}"
       prowls.each do |p|
-        p.notify('Пыль', message)
+        p.notify(:dust, message)
       end
     end
   end
@@ -42,14 +42,15 @@ class RainAnnouncer
   TIME_FORMAT = '%H:%M'
   
   def self.prowls
-    Prowl.where(do_rain: 1).where{rain_announced_at + SPAM_PROTECTION_INTERVAL < Time.now}
+    Prowl.where(do_rain: 1).where{rain_at + SPAM_PROTECTION_INTERVAL < Time.now}
   end
 
-  def self.notify(ts, has_started, mm=nil)
+  def self.notify(params) # ts, has_started, mm=nil
+	ts, has_started, mm = params
     size =  mm.to_i > 0 ? " Выпало %.2f mm осадков." % mm : ''
     message = "В #{ts.strftime(TIME_FORMAT)} #{has_started ? "начался" : "закончился"} дождь.#{size}"
     prowls.each do |p|
-      p.notify('Дождь', message)
+      p.notify(:rain, message)
     end
   end
 end
@@ -119,6 +120,7 @@ end
 def what_about_rain?
   r_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
   subset = Rainsum.where{row_names > Time.now - 2.days}
+  LOGGER.debug(subset.inspect)
   if subset.xvalid?
     if last_rain = subset.rains.last
       LOGGER.debug("last_rain: #{last_rain.inspect}, r_stat: #{r_stat.rain.inspect}")
