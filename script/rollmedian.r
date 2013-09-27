@@ -1,11 +1,13 @@
 #!/usr/bin/R
 # install.packages('xts')
-# install.packages('RSQLite')
+# install.packages('yaml')
+# install.packages('RPostgreSQL')
 # script can be called with one or two parameters: "update" and "plot"
 # R --slave -f ./script/rollmedian.r --args update
 
-suppressMessages(library(RSQLite))
+suppressMessages(library(RPostgreSQL))
 suppressMessages(library(xts))
+suppressMessages(library(yaml))
 
 args = commandArgs()
 script_name = args[4]
@@ -16,10 +18,11 @@ base_dir = ifelse(is_interactive,
   normalizePath(paste(dirname(script_name), '/../', sep=""))
 )
 
-db_name = paste(base_dir, '/db/air_quality.sqlite3', sep="")
+config = yaml.load_file(paste(base_dir, '/db/r_config.yaml', sep=''))
+
 # print(args)
 # print(db_name)
-dbh = dbConnect(SQLite(), db_name, flags = SQLITE_RO)
+dbh = dbConnect(PostgreSQL(), host=config$db$host, dbname=config$db$name, user=config$db$user, password=config$db$password)
 
 PAST_TIME = 3*7*24*60*60
 MEDIAN_DUST_TABLE = "rollmedians"
@@ -29,8 +32,7 @@ OUT_FILE_NAME = paste(base_dir, '/public/img/weekly_filtered.png', sep="")
                    
 update_roll <- function()
 {
-  sql = paste("select measured_at, d1, rc from dc1100s
- where strftime('%s', 'now') - measured_at < ", PAST_TIME, " order by measured_at")
+  sql = paste("select measured_at, d1, rc from dc1100s where extract(epoch from now()) - measured_at < ", PAST_TIME, " order by measured_at")
   d = dbGetQuery(dbh, sql)
   dust_ts = xts(d$d1, as.POSIXct(d$measured_at, origin="1970-01-01"))
   clear_rain = mapply(function(a,b){max(0, b - a)}, head(d$rc, -1), tail(d$rc, -1))
@@ -38,14 +40,11 @@ update_roll <- function()
   dust_rollmed = rollmedian(dust_ts, 3001, fill=c("extend", "extend", "extend"))
   # rain_rollsum = rollapply(rain_ts, 5, sum, fill=c("extend", "extend", "extend"))
 
-  dbDisconnect(dbh)
-  
-  dbh_write = dbConnect(SQLite(), db_name)                       
-  save_roll(dbh_write, MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed))
-  save_roll(dbh_write, SUM_RAIN_TABLE, as.data.frame(rain_ts))
+  save_roll(MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed))
+  save_roll(SUM_RAIN_TABLE, as.data.frame(rain_ts))
 }
 
-save_roll <- function(dbh, table_name, dataset)
+save_roll <- function(table_name, dataset)
 {
   if (dbExistsTable(dbh, table_name)) {dbRemoveTable(dbh, table_name)}
   dbWriteTable(dbh, table_name, as.data.frame(dataset))

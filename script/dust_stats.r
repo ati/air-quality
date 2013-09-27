@@ -1,19 +1,22 @@
 #!/usr/bin/R --slave -f
 
-suppressMessages(library(RSQLite))
+suppressMessages(library(RPostgreSQL))
+suppressMessages(library(yaml))
 #
 ## constants
-db_name =  "~ati/air-quality/db/air_quality.sqlite3"
 averages = c("select avg(d1) as d from dc1100s group by measured_at/3600", "select avg(d2) as d from dc1100s group by measured_at/3600")
 trends = c("select measured_at, d1 as d from dc1100s order by id desc limit 300", "select measured_at, d2 as d from dc1100s order by id desc limit 300")
 sql = data.frame(averages, trends)
 
-dbh_read = dbConnect(SQLite(), db_name, flags = SQLITE_RO)
+
+base_dir = paste(Sys.getenv('HOME'), '/air-quality', sep="")
+config = yaml.load_file(paste(base_dir, '/db/r_config.yaml', sep=''))
+dbh = dbConnect(PostgreSQL(), host=config$db$host, dbname=config$db$name, user=config$db$user, password=config$db$password)
 
 get_data <- function(q_type, n_sensor)
 {
   query = paste(sql[[q_type]][n_sensor])
-	res = dbGetQuery(dbh_read, query)
+	res = dbGetQuery(dbh, query)
 }
 
 get_quantiles <- function(n_sensor)
@@ -32,16 +35,11 @@ get_trend <- function(n_sensor)
 
 t1 = get_trend(1)
 q1 = get_quantiles(1)
+res = dbSendQuery(dbh, paste("update dc1100s_stats set trend=", t1, ", quantiles='", q1, "' where n_sensor=1", sep=""))
+dbClearResult(res)
 
 t2 = get_trend(2)
 q2 = get_quantiles(2)
-
-dbDisconnect(dbh_read)
-
-dbh_write = dbConnect(SQLite(), db_name)
-res = dbSendQuery(dbh_write, paste("update dc1100s_stats set trend=", t1, ", quantiles='", q1, "' where n_sensor=1", sep=""))
-dbClearResult(res)
-res = dbSendQuery(dbh_write, paste("update dc1100s_stats set trend=", t2, ", quantiles='", q2, "' where n_sensor=2", sep=""))
+res = dbSendQuery(dbh, paste("update dc1100s_stats set trend=", t2, ", quantiles='", q2, "' where n_sensor=2", sep=""))
 dbClearResult(res)
 
-dbDisconnect(dbh_write)

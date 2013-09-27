@@ -1,7 +1,7 @@
 require 'sequel'
 require 'json'
 
-DB = Sequel.sqlite(File.join(BASE_DIR, 'db', 'air_quality.sqlite3'))
+DB = Sequel.postgres(host: 'localhost', user: CONFIG['db_user'], password: CONFIG['db_password'], database: 'vozduh')
 TIME_OFFSET = 4*60*60
 
 class City < Sequel::Model
