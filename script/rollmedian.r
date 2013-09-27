@@ -47,7 +47,7 @@ update_roll <- function()
 save_roll <- function(table_name, dataset)
 {
   if (dbExistsTable(dbh, table_name)) {dbRemoveTable(dbh, table_name)}
-  dbWriteTable(dbh, table_name, as.data.frame(dataset))
+  dbWriteTable(dbh, table_name, as.data.frame(dataset), row.names=TRUE, field.types=list(row_names="char(19)", V1="integer"))
 }
 
 plot_rollmedian <- function()
