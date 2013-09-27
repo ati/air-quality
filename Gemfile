@@ -8,7 +8,8 @@ gem 'rack_csrf'
 gem 'parseconfig'
 
 gem 'sequel'
-gem 'sqlite3'
+#gem 'sqlite3'
+gem 'pg'
 
 # чтение информации из картинок в "галерее"
 gem 'exifr'

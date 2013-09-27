@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 BASE_DIR = File.dirname(__FILE__)
+CONFIG = {}
 $LOAD_PATH << BASE_DIR + '/lib'
 
 require 'sinatra/reloader' if development?
@@ -234,7 +235,8 @@ class Vozduh < Sinatra::Application
 
 
   configure do
-    set :config, ParseConfig.new(BASE_DIR + '/db/dust.config')
+    CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+    set :config, CONFIG
 
     Dir.mkdir('logs') unless File.exist?('logs')
     $logger = Logger.new('logs/common.log','weekly')

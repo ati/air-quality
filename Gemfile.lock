@@ -3,8 +3,24 @@ GEM
   specs:
     backports (3.3.4)
     exifr (1.1.3)
+    gmail (0.4.0)
+      gmail_xoauth (>= 0.3.0)
+      mail (>= 2.2.1)
+      mime (>= 0.1)
+    gmail_xoauth (0.4.1)
+      oauth (>= 0.3.6)
+    mail (2.5.4)
+      mime-types (~> 1.16)
+      treetop (~> 1.4.8)
+    mime (0.1)
+    mime-types (1.25)
+    mini_magick (3.6.0)
+      subexec (~> 0.2.1)
     multi_json (1.8.0)
+    oauth (0.4.7)
     parseconfig (1.0.2)
+    pg (0.17.0)
+    polyglot (0.3.3)
     prowler (1.3.1)
     rack (1.5.2)
     rack-protection (1.5.0)
@@ -32,8 +48,11 @@ GEM
     sinatra-formhelpers (0.4.0)
     sinatra-reloader (1.0)
       sinatra-contrib
-    sqlite3 (1.3.8)
+    subexec (0.2.3)
     tilt (1.4.1)
+    treetop (1.4.15)
+      polyglot
+      polyglot (>= 0.3.1)
     xml-simple (1.1.2)
 
 PLATFORMS
@@ -41,7 +60,10 @@ PLATFORMS
 
 DEPENDENCIES
   exifr
+  gmail
+  mini_magick
   parseconfig
+  pg
   prowler
   rack_csrf
   ruby-notify-my-android
@@ -50,4 +72,3 @@ DEPENDENCIES
   sinatra-content-for2
   sinatra-formhelpers
   sinatra-reloader
-  sqlite3
