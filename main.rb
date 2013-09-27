@@ -16,6 +16,8 @@ require 'sequel'
 require 'parseconfig'
 require 'exifr'
 
+CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+
 require 'core'
 require 'potd'
 require 'models'
@@ -235,7 +237,6 @@ class Vozduh < Sinatra::Application
 
 
   configure do
-    CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
     set :config, CONFIG
 
     Dir.mkdir('logs') unless File.exist?('logs')
