@@ -49,9 +49,8 @@ class Prowl < Sequel::Model
           n.description = message
         end
       end
-	  ts_key = "#{facility}_at".to_s
-	  self[ts_key] = Time.now
-	  save
+      ts_key = "#{facility}_at".to_s
+      self.update(ts_key => Time.now)
       return true
     rescue Exception => e
       LOGGER.error(e.message)
