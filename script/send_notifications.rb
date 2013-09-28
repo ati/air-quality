@@ -22,7 +22,7 @@ class DustAnnouncer
   SPAM_PROTECTION_INTERVAL = 60.minutes
   
   def self.prowls
-    Prowl.where(do_dust: 1).where{dust_at + SPAM_PROTECTION_INTERVAL < Time.now}
+    Prowl.where(do_dust: 1).where("dust_at + interval '#{SPAM_PROTECTION_INTERVAL} seconds' < '#{Time.now}'")
   end
 
   def self.notify(n, direction)
@@ -42,7 +42,7 @@ class RainAnnouncer
   TIME_FORMAT = '%H:%M'
   
   def self.prowls
-    Prowl.where(do_rain: 1).where{rain_at + SPAM_PROTECTION_INTERVAL < Time.now}
+    Prowl.where(do_rain: 1).where("rain_at + interval '#{SPAM_PROTECTION_INTERVAL} seconds' < '#{Time.now}'")
   end
 
   def self.notify(params) # ts, has_started, mm=nil

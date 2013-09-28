@@ -1,6 +1,12 @@
 require 'sequel'
 require 'json'
 
+if !defined?(CONFIG)
+  require 'parseconfig'
+  BASE_DIR = './' unless defined?(BASE_DIR)
+  CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+end
+
 DB = Sequel.postgres(host: 'localhost', user: CONFIG['db_user'], password: CONFIG['db_password'], database: 'vozduh')
 TIME_OFFSET = 4*60*60
 
