@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 BASE_DIR = File.dirname(__FILE__)
-CONFIG = {}
 $LOAD_PATH << BASE_DIR + '/lib'
 
 require 'sinatra/reloader' if development?
@@ -10,6 +9,7 @@ require 'sinatra/form_helpers'
 require 'rack/csrf'
 require 'logger'
 
+require 'date'
 require 'csv'
 require 'json'
 require 'sequel'
@@ -73,7 +73,16 @@ class Vozduh < Sinatra::Application
   end
 
 
+  get '/data/rain.d3' do
+    content_type :json
+    start, stop, step = sanitize_rain_d3_params()
+    return [].to_json unless start && stop && step
+    Rainsum.range(start, stop, step).to_json
+  end
+
+
   get '/data/dust.csv' do
+
     to = Time.now.utc.to_i
     from = to - 2.days
 
@@ -246,6 +255,7 @@ class Vozduh < Sinatra::Application
     use Rack::Csrf, skip: %w(POST:/data/dc1100)
     set :clean_trace, true
     set :environment, settings.config['VOZDUH_ENV'].to_sym
+    set :protection, except: :session_hijacking
     enable :sessions
     
     if development?
@@ -318,6 +328,16 @@ class Vozduh < Sinatra::Application
     def authorized?
       @auth ||=  Rack::Auth::Basic::Request.new(request.env)
       @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == [settings.config['username'], settings.config['password']]
+    end
+
+    def sanitize_rain_d3_params
+      res = {}
+      [:start, :stop].each do |p|
+        res[p] = params[p].nil? ? nil : DateTime.parse(params[p])
+        res[p] = res[p].to_time if res[p]
+      end
+      res[:step] = params[:step].nil? ? nil : params[:step].to_i
+      [res[:start], res[:stop], res[:step]]
     end
 
   end

@@ -1,0 +1,67 @@
+<html>
+  <head>
+    <title>cubism test</title>
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/d3.v3.min.js"></script>
+    <script type="text/javascript" src="/js/cubism.v1.min.js"></script>
+
+
+    <script type="text/javascript">
+      <!--
+      var rain_chart_size = 720;
+      var rain_chart_time = 2*24*3600; // should be divisable by rain_chart_size
+
+      jQuery(document).ready(function($) {
+        var context = cubism.context()
+          .serverDelay(24*60*1000)
+          .step(1000*rain_chart_time/rain_chart_size)
+          .size(rain_chart_size);
+
+        var r_samples = context.metric(function(start, stop, step, callback) {
+          d3.json("/data/rain.d3?start=" + start.toISOString()
+            + "&stop=" + stop.toISOString()
+            + "&step=" + step, 
+            function(data) {
+              if(!data) return callback(new Error("unable to load data"));
+              callback(null, data.map(function(d) { return d.value; }));
+            }
+          );
+        });
+
+        d3.select("#raint").call(function(div) {
+          div.append("div")
+            .attr("class", "axis")
+            .call(context.axis().orient("top"));
+
+          div.selectAll(".horizon")
+            .data([r_samples])
+            .enter().append("div")
+            .attr("class", "horizon")
+            .call(context.horizon()
+              .height(50)
+              .format(d3.format(".2f"))
+              .title("Rain samples"));
+
+         div.append("div")
+            .attr("class", "rule")
+            .call(context.rule());
+              });
+      });
+      // -->
+    </script>
+
+    <style type="text/css">
+      #raint { min-height: 50px; }
+    </style>
+  </head>
+
+
+
+  <body>
+    Вот это до дождя
+
+    <div id="raint"></div>
+
+    Вот это -- после.
+  </body>
+</html>
