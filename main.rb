@@ -81,9 +81,15 @@ class Vozduh < Sinatra::Application
 
     csv_string = CSV.generate do |csv|
       csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm'] #,'дождь мм.']
-      air.reverse.each_with_index do |a,i|
-        csv << [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M'), 
-          a[:d1].join(';'), a[:d2].join(';') ]#, a[:rc].size.eql?(3)? a[:rc].map{|v| v+10}.join(';') : nil]
+      air.reverse.each do |a|
+		res = [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M')]
+		if a[:d1][0].nil?
+		  2.times { res << '1000;1000;1000' }
+		else
+          res << a[:d1].join(';')
+		  res << a[:d2].join(';')
+		end
+        csv << res
       end
     end
 
