@@ -30,7 +30,7 @@ class Time
   end
 
   def now_msk
-    Time.at(Time.now.utc.to_i + TIME_OFFSET)
+    Time.now
   end
 end
 

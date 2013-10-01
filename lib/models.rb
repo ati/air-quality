@@ -8,7 +8,6 @@ if !defined?(CONFIG)
 end
 
 DB = Sequel.postgres(host: 'localhost', user: CONFIG['db_user'], password: CONFIG['db_password'], database: 'vozduh')
-TIME_OFFSET = 4*60*60
 
 class City < Sequel::Model
     attr_accessor :max_year, :min_year, :is_active
@@ -66,7 +65,7 @@ class Dc1100 < Sequel::Model
     AVG_INTERVAL = 30*60
 
     def ts_to_s( format = '%Y-%m-%d %H:%M')
-        Time.at(measured_at + TIME_OFFSET).utc.strftime(format)
+        Time.at(measured_at).strftime(format)
     end
 
     def self.timerange(from, to)
