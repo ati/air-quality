@@ -49,7 +49,7 @@
                 customBars: true,
                 underlayCallback: function(canvas, area, g) // plot rains as vertical color stripes
                 {
-                  rains = <%= @rains.map{|r| {from: r.from.to_i*1000, to: r.to.to_i*1000, size: r.size}}.to_json %>;
+                  rains = <%= @rains.map{|r| {from: (r.from.to_i + 4*3600)*1000, to: (r.to.to_i + 4*3600)*1000, size: r.size}}.to_json %>;
                   var min_data_x = g.getValue(0,0);
                   var max_data_x = g.getValue(g.numRows()-1,0);
 
