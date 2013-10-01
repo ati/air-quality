@@ -7,10 +7,26 @@
   <script type="text/javascript" src="/js/dygraph-combined.js"></script>
   <script type="text/javascript">
 
+    var current_ts = <%= Time.now.to_i %>;
+
     function data_url()
     {
-      var data_url = '/data/dust.csv?r=' + new Date().getTime();
+      var data_url = '/data/dust.csv?ts=' + current_ts;
       return data_url;
+    }
+
+    function rain_color(rain_size)
+    {
+      rain_colors = ["#FFFFFF", "#FCFAEE", "#F5EFD4", "#EEE4BA", "#E8DAA1"];
+      if (rain_size < 1)
+        return rain_colors[0];
+      else if (rain_size < 4)
+        return rain_colors[1];
+      else if (rain_size < 8)
+        return rain_colors[2];
+      else 
+        return rain_colors[3];
+      end
     }
 
     jQuery(document).ready(function($) {
@@ -23,18 +39,33 @@
                 labelsDiv: 'graph_labels',
                 labelsDivWidth: 400,
                 hideOverlayOnMouseOut: false,
-                gridLineColor: 'rgb(213,213,213)',
-                // fillGraph: true,
-                // labels: City.active_names(),
+                gridLineColor: 'rgb(223,223,223)',
                 rollPeriod: 3,
-                // showRoller: true,
                 logscale: true,
                 clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
                 axisLabelFontSize: 13,
                 labelsSeparateLines: true,
-                // drawGapEdgePoints: true,
                 connectSeparatedPoints: false,
                 customBars: true,
+                underlayCallback: function(canvas, area, g) // plot rains as vertical color stripes
+                {
+                  rains = <%= @rains.map{|r| {from: r.from.to_i*1000, to: r.to.to_i*1000, size: r.size}}.to_json %>;
+                  var min_data_x = g.getValue(0,0);
+                  var max_data_x = g.getValue(g.numRows()-1,0);
+
+                  $.each(rains, function(index, rain)
+                  {
+                    canvas.fillStyle = rain_color(rain.size);
+                    var canvas_left_x = g.toDomXCoord(rain.from);
+                    var canvas_width = g.toDomXCoord(rain.to) - canvas_left_x;
+                    // alert('from: ' + rain.from + ', max_data_x: ' + max_data_x);
+
+                    if ((rain.to > min_data_x) && (rain.from < max_data_x))
+                    {
+                      canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
+                    }
+                  });
+                },
             }
         );
     });
@@ -104,14 +135,14 @@
   <!-- graph -->
   <div class="row">
     <div class="span3 offset1"><br /><br /><h4>Пыль и дождь:</h4><br /></div>
-    <div class="span9" id="graph" style="width: 80%;"></div>
+    <div class="span9" id="graph" style="width: 80%"></div>
   </div>
   <br />
   <div class="row">
     <div class="span3 offset1" id="graph_labels"></div>
     <div class="span6">
       <small>
-        Значения уровней пыли везде на этих страничках означает количество пылинок в 0.01 кубического <b>фута</b> воздуха (примерно в одном вдохе). Чтобы получить штуки пылинок в кубическом <b>метре</b> воздуха, надо умножить приведённые значения примерно на 3500. Или точно на 3531.47.
+        Пыль изменяется в штуках пылинок в 0.01 кубического <b>фута</b> воздуха (примерно в одном вдохе). Вертикальные желтые полоски - дожди.
       </small>
     </div>
   </div>
@@ -119,7 +150,7 @@
 
   <div class="row well">
     <div class="span9 offset1" style="padding-bottom: 20px;">
-      <strong>6 ноября 2012</strong>: дружественный проект <a href="http://geiger.su/">geiger.su</a> в очередной раз <a href="http://geiger.su/?p=83">отметил связь осадков и повышения уровня радиации</a>. Будем надеяться, дальнейшие наблюдения позволят нам лучше понять это явление.
+      <strong>1 октября 2013</strong>: На сайт вернулось отображение дождей в виде вертикальных желтых полосок на общем графике.
     </div>
     <div class="span9 offset1">
       <strong>Кстати</strong>: на сайте появилась статья о том, <a href="/texts/way_of_dust">как движется пыль внутри тела человека</a>. 
