@@ -8,7 +8,6 @@ if !defined?(CONFIG)
 end
 
 DB = Sequel.postgres(host: 'localhost', user: CONFIG['db_user'], password: CONFIG['db_password'], database: 'vozduh')
-TIME_OFFSET = 4*60*60
 
 class City < Sequel::Model
     attr_accessor :max_year, :min_year, :is_active
@@ -66,7 +65,7 @@ class Dc1100 < Sequel::Model
     AVG_INTERVAL = 30*60
 
     def ts_to_s( format = '%Y-%m-%d %H:%M')
-        Time.at(measured_at + TIME_OFFSET).utc.strftime(format)
+        Time.at(measured_at).strftime(format)
     end
 
     def self.timerange(from, to)
@@ -253,6 +252,30 @@ end
 
 
 Rainsum.dataset_module do
+
+  # выдать дождевые суммы между метками времени start и stop, с шагом step
+  # правильно обработать "дыры" в данных из базы
+  #
+  def range(start, stop, step)
+    res = []
+
+    samples = where(row_names: start..stop).order(:row_names).map{|rs| {at: rs.at.to_i, rc: rs.rc} }
+    (start.to_i .. stop.to_i).step(step) do |cur_start|
+      if samples.count == 0
+        res << 0
+      elsif cur_start + step < samples.first[:at]
+        res << 0
+      elsif cur_start > samples.last[:at]
+        res << 0
+      else
+        first_idx = samples.find_index{|e| e[:at] >= cur_start}
+        last_idx = samples.find_index{|e| e[:at]  >= cur_start + step }
+        last_idx = last_idx.nil? ? samples.count - 1 : last_idx - 1
+        res << samples.slice(first_idx .. last_idx).reduce(0){ |product, el| product += el[:rc] }
+      end
+    end
+    res
+  end
 
   def rains
     res = []

@@ -36,7 +36,7 @@
     <body>
         <header>
           <%
-            current_date = Time.at(Time.now.utc.to_i + TIME_OFFSET)
+            current_date = Time.now
 
             def active_class(path)
               request.path_info.start_with?(path)? ' class="active"' : ''

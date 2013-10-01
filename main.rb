@@ -1,7 +1,6 @@
 # encoding: utf-8
 
 BASE_DIR = File.dirname(__FILE__)
-CONFIG = {}
 $LOAD_PATH << BASE_DIR + '/lib'
 
 require 'sinatra/reloader' if development?
@@ -10,6 +9,7 @@ require 'sinatra/form_helpers'
 require 'rack/csrf'
 require 'logger'
 
+require 'date'
 require 'csv'
 require 'json'
 require 'sequel'
@@ -17,6 +17,7 @@ require 'parseconfig'
 require 'exifr'
 
 CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+ENV['TZ'] = "Europe/Moscow"
 
 require 'core'
 require 'potd'
@@ -33,6 +34,7 @@ class Vozduh < Sinatra::Application
       @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
       @rain = Rain.from_s(@rain_stat.quantiles)
 
+      @rains = Rainsum.where("row_names > '" + (Time.now - 2.days).utc.to_s + "'").rains
       @potds = []
       (0..2).each do |d|
         p = Potd.new
@@ -73,7 +75,16 @@ class Vozduh < Sinatra::Application
   end
 
 
+  get '/data/rain.d3' do
+    content_type :json
+    start, stop, step = sanitize_rain_d3_params()
+    return [].to_json unless start && stop && step
+    Rainsum.range(start, stop, step).to_json
+  end
+
+
   get '/data/dust.csv' do
+
     to = Time.now.utc.to_i
     from = to - 2.days
 
@@ -82,17 +93,16 @@ class Vozduh < Sinatra::Application
     csv_string = CSV.generate do |csv|
       csv << ['Дата', 'пыль &lt; 2.5µm','пыль &gt; 2.5 µm'] #,'дождь мм.']
       air.reverse.each do |a|
-		res = [Time.at(a[:measured_at] + TIME_OFFSET).utc.strftime('%Y-%m-%d %H:%M')]
-		if a[:d1][0].nil?
-		  2.times { res << '1000;1000;1000' }
-		else
+        res = [Time.at(a[:measured_at]).strftime('%Y-%m-%d %H:%M:%S')]
+        if a[:d1][0].nil?
+          2.times { res << '1000;1000;1000' }
+        else
           res << a[:d1].join(';')
-		  res << a[:d2].join(';')
-		end
+          res << a[:d2].join(';')
+        end
         csv << res
       end
     end
-
     csv_string
   end
 
@@ -157,7 +167,7 @@ class Vozduh < Sinatra::Application
 
 
   get '/date/today' do
-    redirect '/date/' + Time.at(Time.now.utc + TIME_OFFSET).date_path
+    redirect '/date/' + Time.now.date_path
   end
 
 
@@ -252,6 +262,7 @@ class Vozduh < Sinatra::Application
     use Rack::Csrf, skip: %w(POST:/data/dc1100)
     set :clean_trace, true
     set :environment, settings.config['VOZDUH_ENV'].to_sym
+    set :protection, except: :session_hijacking
     enable :sessions
     
     if development?
@@ -283,9 +294,7 @@ class Vozduh < Sinatra::Application
       y = y.to_i
       m = m.to_i
       d = d.to_i
-      date = (y.between?(1900, Time.now.year) && m.between?(1, 12) && d.between?(1,31))? Time.mktime(y,m,d) : nil
-      return nil if date.nil?
-      return date.between?(Time.mktime(1900, 1, 1), Time.now.utc + TIME_OFFSET)? date : nil # interested in more or less recent dates
+      Time.mktime(y,m,d)
     end
 
     def spell_date(d, span)
@@ -324,6 +333,16 @@ class Vozduh < Sinatra::Application
     def authorized?
       @auth ||=  Rack::Auth::Basic::Request.new(request.env)
       @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == [settings.config['username'], settings.config['password']]
+    end
+
+    def sanitize_rain_d3_params
+      res = {}
+      [:start, :stop].each do |p|
+        res[p] = params[p].nil? ? nil : DateTime.parse(params[p])
+        res[p] = res[p].to_time if res[p]
+      end
+      res[:step] = params[:step].nil? ? nil : params[:step].to_i
+      [res[:start], res[:stop], res[:step]]
     end
 
   end

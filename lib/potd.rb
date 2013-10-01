@@ -101,10 +101,10 @@ class Potd
     end
 
     # read fresh version of json file
-    now = Time.now.utc + TIME_OFFSET
+    now = Time.now
     if tp.nil? || ((now.to_i - tp['now'].to_i > 30.minutes) && Time.at(tp['a_ts'].to_i).between?(now - 7.days, now) ) # или вообще нет, или старше 30 минут для дат внутри последних 7 дней
       begin
-        s = Net::HTTP.get( URI.parse 'http://ljsm.tautology2.net/weather/archive.php?ts=' + (d.to_i + TIME_OFFSET - 4.days).to_s)
+        s = Net::HTTP.get( URI.parse 'http://ljsm.tautology2.net/weather/archive.php?ts=' + (d.to_i - 4.days).to_s)
         tp = JSON.parse(s)
         FileUtils.mkpath(d_dir)
         File.open(f, 'w') do |outfile|
