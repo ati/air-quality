@@ -48,7 +48,9 @@ class RainAnnouncer
   def self.notify(params) # ts, has_started, mm=nil
 	ts, has_started, mm = params
     size =  mm.to_i > 0 ? " Выпало %.2f mm осадков." % mm : ''
+    ENV['TZ'] = "Europe/Moscow"
     message = "В #{ts.strftime(TIME_FORMAT)} #{has_started ? "начался" : "закончился"} дождь.#{size}"
+    ENV['TZ'] = "UTC"
     prowls.each do |p|
       p.notify(:rain, message)
     end
