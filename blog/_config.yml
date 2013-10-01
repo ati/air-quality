@@ -1,0 +1,26 @@
+name: Воздушный блог
+markdown: redcarpet
+pygments: true
+timezone: "Europe/Moscow"
+encoding: utf-8
+pygments: false
+baseurl: /blog/
+url: http://vozduh.msk.ru/blog/
+
+theme: scribble 
+disqus_shortname: variomap
+google_analytics: UA-34430453-1
+
+signoff: Саша
+
+owner:
+  name: Московский воздух
+  avatar: /img/blog_avatar.png
+
+links:
+ - name: Воздух
+   url: /
+
+paginate: 10
+
+
