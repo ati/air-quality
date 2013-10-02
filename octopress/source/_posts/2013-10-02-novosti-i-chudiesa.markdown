@@ -16,4 +16,4 @@ categories:
 
 А раздел "дневник", видимо закроется. 
 
-{% img /img/dust/mZkw9.jpg 670 505 %}
+{% img /images/dust/mZkw9.jpg 670 505 %}
