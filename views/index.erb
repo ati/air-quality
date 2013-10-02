@@ -3,8 +3,14 @@
   текущая ситуация и прогноз.
 <% end %>
 
+<% content_for :stylesheets do %>
+  <link rel="stylesheet" href="/royalslider/royalslider.css">
+  <link rel="stylesheet" href="/royalslider/skins/default/rs-default.css"> 
+<% end %>
+
 <% content_for :scripts do %>
   <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+  <script type="text/javascript" src="/royalslider/jquery.royalslider.custom.min.js"></script>
   <script type="text/javascript">
 
     var current_ts = <%= Time.now.to_i %>;
@@ -30,7 +36,17 @@
     }
 
     jQuery(document).ready(function($) {
-        graph = new Dygraph(
+        var slider = $(".royalSlider").royalSlider({
+          keyboardNavEnabled: true,
+          autoScaleSlider: true,
+          }).data('royalSlider');
+
+        slider.ev.on('rsAfterSlideChange', function(event) {
+          // triggers after slide change
+          alert(event);
+        });
+
+        var graph = new Dygraph(
             document.getElementById('graph'),
             data_url(),
             {
@@ -83,6 +99,19 @@
   %>
 
   <div class="row">
+    <span class="span9">
+      <div class="alert alert-info">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <strong>2013-10-02</strong> На сайте появился <a href="/blog/">блог</a> с картинками и новостями.
+        <br />
+        <strong>2013-10-01</strong>: На сайт вернулось отображение дождей в виде вертикальных желтых полосок на общем графике.
+        <br />
+        <strong>Кстати</strong>: на сайте появилась статья о том, <a href="/texts/way_of_dust">как движется пыль внутри тела человека</a>. 
+      </div>
+    </span>
+  </div>
+
+  <div class="row">
     <div class="span12 offset1">
       <h4>Текущая ситуация:</h4><br />
       <div class="span2">
@@ -127,9 +156,6 @@
         </div>
       </div>
       <% end %>
-      <div class="span4">
-        <strong>2013-10-01</strong> На сайте появился <a href="/blog/">блог</a> с картинками и новостями.
-      </div>
   </div>
 
   <!-- graph -->
@@ -148,17 +174,38 @@
   </div>
   <br />
 
-  <div class="row well">
-    <div class="span9 offset1" style="padding-bottom: 20px;">
-      <strong>1 октября 2013</strong>: На сайт вернулось отображение дождей в виде вертикальных желтых полосок на общем графике.
-    </div>
-    <div class="span9 offset1">
-      <strong>Кстати</strong>: на сайте появилась статья о том, <a href="/texts/way_of_dust">как движется пыль внутри тела человека</a>. 
-    </div>
-  </div>
-
   <div class="row">
     <div class="span9 offset1">
+      <h4 style="padding-top: 30px;">Как выглядел воздух сейчас и в прошлом?</h4>
+      <div class="royalSlider rsDefault">
+        <!-- lazy loaded image slide -->
+        <a class="rsImg" href="image.jpg">image desc</a>
+
+        <!-- HTML content slide -->
+        <p>Content goes here</p>
+
+        <!-- image and content -->
+        <div>
+            <img class="rsImg" src="image.jpg" data-rsVideo="https://vimeo.com/44878206" />
+            <p>Some content after...</p>
+        </div>
+
+        <!-- HTML content -->
+        <div>
+            Put any HTML content here
+        </div>
+
+        <!-- HTML content (100% with and height) -->
+        <div class="rsContent">
+            Put any HTML content here
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="span9 offset1">
+      <h4 style="padding-top: 30px;">Подробнее о том, что означают цифры и как они получены</h4>
       <p>
       Что означают эти красивые графики? Во-первых то, что в московском воздухе есть пыль. Её довольно много. Во-вторых то, что её уровень меняется день ото дня. На графике внизу показано, как меняется уровень мелкой пыли в зависимости от дня недели. Видно, что максимальный уровень достигался в середине недели, в районе среды-четверга. Скорее всего, бегать и кататься на велосипеде в начале этой осени лучше было с субботы до вторника. На первой неделе сентября минимальный уровень наблюдался в воскресенье-понедельник.  Наш аналитический отдел постарается и дальше давать ценные прогнозы на прошлое. И может быть даже на настоящее (в конце второй сентябрьской недели, кстати, уровень устойчиво растёт), следите за новостями.
       </p>
@@ -206,24 +253,3 @@
       </p>
     </div>
   </div>
-
-
-  <br />
-  <br />
-  <div class="row">
-    <div class="span10 offset1">
-      <h4>Последние страницы дневника.</h4>
-      Цифры хороши тем, что точно описывают измеряемые параметры. Но ничто не заменит теплый <s>ламповый</s> взгляд на природу. Вот так выглядел московский воздух в последние дни. Картинки ссылаются на странички "дневника". Там тоже интересно.
-      <br />
-      <br />
-      <% @potds.reverse.each do |p| %>
-        <div class="span3">
-          <a href="/date/<%= p.found_for.date_path %>"><%= p.to_html %></a>
-          <br />
-          <%= p.created_at %>
-        </div>
-      <% end %>
-    </div>
-    <br />
-  </div>
-
