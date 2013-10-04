@@ -9,6 +9,10 @@ require 'exifr'
 require 'mini_magick'
 
 BASE_DIR = File.dirname(File.dirname(__FILE__))
+$LOAD_PATH << BASE_DIR + '/lib'
+
+require 'models'
+
 TMP_DIR = BASE_DIR + '/tmp'
 
 CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
@@ -57,6 +61,7 @@ def process_file(fn, description)
 
   File.open(dir + "/#{n}.yml", "w+b", 0644) { |f| f.write({'description' => description['description']}.to_yaml) }
   FileUtils.mv(fn, [IMG_ARCHIVE_DIR, File.basename(fn)].join(File::SEPARATOR))
+  Potd.from_file(File.basename(fn))
 end
 
 

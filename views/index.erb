@@ -6,6 +6,20 @@
 <% content_for :stylesheets do %>
   <link rel="stylesheet" href="/royalslider/royalslider.css">
   <link rel="stylesheet" href="/royalslider/skins/default/rs-default.css"> 
+  <style type="text/css">
+    .royalSlider,
+    .royalSlider .rsOverflow,
+    .royalSlider .rsSlide,
+    .royalSlider .rsVideoFrameHolder,
+    .royalSlider .rsThumbs {
+        background: none !important;
+    }
+    .rsGCaption {
+      position: absolute;
+      top: 50%;
+      height: 1.7em;
+    }
+  </style>
 <% end %>
 
 <% content_for :scripts do %>
@@ -35,15 +49,68 @@
       end
     }
 
+
     jQuery(document).ready(function($) {
+        var current_slider_id = 0;
+
         var slider = $(".royalSlider").royalSlider({
           keyboardNavEnabled: true,
-          autoScaleSlider: true,
+          imageScaleMode: 'fill',
+          controlNavigation: 'none',
+          keyboardNavEnabled: true,
+          navigateByClick: false,
+          globalCaption: true,
+          slidesOrientation: 'vertical',
+          visibleNearby: {
+              enabled: true,
+              centerArea: 0.7,
+              center: true,
+              navigateByCenterClick: false,
+          },
           }).data('royalSlider');
 
         slider.ev.on('rsAfterSlideChange', function(event) {
-          // triggers after slide change
-          alert(event);
+          var too_short_above = 2;
+          var too_short_below = 3;
+          var optimum_slides_count = 15;
+
+
+          if (current_slider_id < this.currSlideId) // едем вниз
+          {
+            if (this.slides.length - this.currSlideId < too_short_below)
+            {
+              var names = this.slides[this.slides.length - 1].image.split('/').reverse();
+              $.get('/potd/after/' + names[0], function(data) {
+                slider.appendSlide(data);
+              });
+              if (this.slides.length > optimum_slides_count)
+              {
+                // can't remove from top, looks awfull
+                // this.removeSlide(0);
+              }
+            }
+          }
+          else // едем вверх
+          {
+            if (this.currSlideId < too_short_above)
+            {
+              var names = this.slides[0].image.split('/').reverse();
+              $.get('/potd/before/' + names[0], function(data) {
+                slider.appendSlide(data, 0);
+              });
+              if (this.slides.length > optimum_slides_count)
+              {
+                this.removeSlide(this.slides.length - 1);
+              }
+            }
+          }
+
+          current_slider_id = this.currSlideId;
+        });
+
+        slider.ev.on('rsSlideClick', function() {
+          // open calendar pages
+          window.location.href = '/date/' + this.currSlide.caption
         });
 
         var graph = new Dygraph(
@@ -177,28 +244,12 @@
   <div class="row">
     <div class="span9 offset1">
       <h4 style="padding-top: 30px;">Как выглядел воздух сейчас и в прошлом?</h4>
-      <div class="royalSlider rsDefault">
-        <!-- lazy loaded image slide -->
-        <a class="rsImg" href="image.jpg">image desc</a>
+      <div class="royalSlider rsDefault" style="min-height: 587px; width: 786px;">
 
-        <!-- HTML content slide -->
-        <p>Content goes here</p>
+        <% @potds.each do |potd| %>
+          <img class="rsImg" src="/potd/medium/<%= potd.file_name %>" alt="<%= potd.exif_at.strftime('%d.%m.%Y') %>" />
+        <% end %>
 
-        <!-- image and content -->
-        <div>
-            <img class="rsImg" src="image.jpg" data-rsVideo="https://vimeo.com/44878206" />
-            <p>Some content after...</p>
-        </div>
-
-        <!-- HTML content -->
-        <div>
-            Put any HTML content here
-        </div>
-
-        <!-- HTML content (100% with and height) -->
-        <div class="rsContent">
-            Put any HTML content here
-        </div>
       </div>
     </div>
   </div>

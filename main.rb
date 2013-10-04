@@ -15,12 +15,13 @@ require 'json'
 require 'sequel'
 require 'parseconfig'
 require 'exifr'
+require 'mini_magick'
 
 CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
 ENV['TZ'] = "Europe/Moscow"
 
 require 'core'
-require 'potd'
+require 'old_potd'
 require 'models'
 require 'prowl'
 
@@ -33,13 +34,8 @@ class Vozduh < Sinatra::Application
       @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first
       @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
       @rain = Rain.from_s(@rain_stat.quantiles)
-
       @rains = Rainsum.where("row_names > '" + (Time.now - 2.days).utc.to_s + "'").rains
-      @potds = []
-      (0..2).each do |d|
-        p = Potd.new
-        @potds << p if p.find(Time.now - d.days, :day, true)
-      end
+      @potds = Potd.exclude(exif_at: nil).order(Sequel.desc(:exif_at)).limit(4)
 
       erb :index
   end
@@ -152,12 +148,52 @@ class Vozduh < Sinatra::Application
   end
 
 
+  def to_html(p)
+    res = ["<#{p[0]}"]
+    p[1].keys.each do |pk|
+      res << "#{pk}=\"#{p[1][pk]}\""
+    end
+    res << "/>"
+    res.join(' ')
+  end
+
+  def to_new_potd(p, direction)
+    r404 = [404, 'not found']
+    return r404 unless !p.nil? && p =~/^\w{32}$/
+    current_potd = Potd.from_file(p)
+    return r404 unless current_potd
+
+    new_potd = direction.eql?(:before) ? Potd.where{exif_at > current_potd.exif_at}.order(:exif_at).limit(1).first :
+      Potd.where{exif_at < current_potd.exif_at}.order(Sequel.desc(:exif_at)).limit(1).first
+    return r404 if new_potd.nil?
+    to_html ['img', {class: 'rsImg', src: '/potd/medium/' + new_potd.file_name, alt: new_potd.exif_at.strftime('%d.%m.%Y') }]
+  end
+
+  get '/potd/before/:img_id' do
+    to_new_potd(params[:img_id], :before)
+  end
+
+  get '/potd/after/:img_id' do
+    to_new_potd(params[:img_id], :after)
+  end
+
+  get '/potd/:size/:img_id' do
+    content_type 'image/jpeg'
+
+    if (params[:img_id] =~ /^\w{32}$/) && Potd::IMG_SIZE.keys.include?(params[:size].to_sym)
+      potd = Potd.from_file(params[:img_id])
+    end
+
+    return potd ? potd.image(params[:size].to_sym) : [404, 'Такой картинки нет']
+  end
+
+
   def render_date(date, span)
     @date = date
     @span = span
 
     if !@date.nil?
-      @potd = Potd.new
+      @potd = OldPotd.new
       @potd.find(date, span)
     end
 
@@ -168,6 +204,10 @@ class Vozduh < Sinatra::Application
 
   get '/date/today' do
     redirect '/date/' + Time.now.date_path
+  end
+
+  get %r{/date/(\d\d)\W(\d\d)\W(\d\d\d\d)} do
+    redirect '/date/' + params[:captures].reverse.join('/')
   end
 
 
@@ -190,66 +230,6 @@ class Vozduh < Sinatra::Application
   get '/date/:year/:month/:day/?' do
     render_date(make_date(params[:year], params[:month], params[:day]), :day)
   end
-
-
-  #get '/cities' do
-  #    defaul'_city = 6 #TODO: geoip
-  #    default_group = 1 #or session?
-  #
-  #    active_cities = (params[:city] || [default_city]).map{ |i| i.to_i }
-  #    @cities = City.order(:id).all {|c| c.is_active = true if active_cities.index(c.id) }
-  #
-  #    @max_year = 0;
-  #    @min_year = 9999;
-  #    @cities.each do |c| 
-  #        @max_year = c.max_year if c.max_year > @max_year
-  #        @min_year = c.min_year if c.min_year < @min_year
-  #    end
-  #
-  #    active_groups = (params[:group]|| [default_group]).map{ |i| i.to_i } 
-  #    @agroups = Group.order(:id).all {|g| g.is_active = true if active_groups.empty? || active_groups.index(g.id) }
-  #
-  #    @years = (2001 .. Time.now.year).to_a
-  #    @cur_year = Time.now.utc.year
-  #    erb :allergen
-  #end
-  #
-  #
-  #get '/data/cities/:year' do
-  #    # render csv data
-  #    cities = (params[:city] || []).map {|i| i.to_i } 
-  #    agroups = (params[:group] || []).map {|i| i.to_i }
-  #    from_d = Time.mktime(params[:year]).utc.to_i
-  #    mms = {}
-  #    ts = []
-  #
-  #    cities.each do |c_id|
-  #        mms[c_id] = {}
-  #        agroups.each do |g_id|
-  #            mms[c_id][g_id] = {}
-  #            DB["select measured_at, sum(cnt) as cnt from measurements
-  #                where city_id = #{c_id} 
-  #                and group_id = #{g_id}
-  #                and measured_at between #{from_d} and #{from_d + 365*24*60*60}
-  #                group by measured_at"].all.map {|d| mms[c_id][g_id][d[:measured_at]] = d[:cnt]}
-  #            ts += mms[c_id][g_id].keys
-  #        end
-  #    end
-  #
-  #    csv_string = CSV.generate do |csv|
-  #        ts.uniq.each do |ts|
-  #            row = [Time.at(ts).strftime("%Y-%m-%d")]
-  #            mms.each do |c_id, gdata|
-  #                gdata.each do |g_id, mdata|
-  #                    row.push(mdata[ts])
-  #                end
-  #            end
-  #            csv << row
-  #        end
-  #    end
-  #
-  #    csv_string
-  #end
 
 
   configure do

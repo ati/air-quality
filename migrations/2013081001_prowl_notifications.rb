@@ -1,4 +1,4 @@
-# sequel -m ./db/migrations sqlite://db/air_quality.sqlite3
+# sequel -m ./migrations postgres://vozduh@localhost/vozduh
 # 
 Sequel.migration do
   change do

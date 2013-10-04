@@ -4,7 +4,7 @@ require 'json'
 require 'net/http'
 require 'fileutils'
 
-class Potd
+class OldPotd
   attr_accessor :t_url, :p_url, :description, :found_for, :url, :width, :height, :lat, :lon, :created_at, :camera, :copyright
 
 

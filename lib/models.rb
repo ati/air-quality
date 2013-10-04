@@ -311,3 +311,55 @@ Rainsum.dataset_module do
     res
   end
 end
+
+
+class Potd < Sequel::Model
+  IMG_SIZE = {
+    full: 0,
+    medium: '786x587',
+    small: '320x240',
+  }
+
+  IMG_DIR = [BASE_DIR, '/public/potd/archive'].join(File::SEPARATOR)
+
+  def self.fullpath(fname)
+    [IMG_DIR, fname].join(File::SEPARATOR)
+  end
+
+  def self.from_file(fname)
+    return nil unless File.exists?(fullpath(fname))
+
+    self.find_or_create(file_name: fname) do |p|
+      exif = EXIFR::JPEG.new(fullpath(fname))
+      dt = exif.date_time_original || exif.date_time rescue Time.now
+      if (exif.gps_latitude_ref && exif.gps_longitude_ref && exif.gps_latitude && exif.gps_longitude)
+        sign_lat = exif.gps_latitude_ref.upcase.eql?('N') ? 1 : -1
+        sign_lon = exif.gps_longitude_ref.upcase.eql?('E') ? 1 : -1
+        exif_lat = exif.gps_latitude
+        exif_lon = exif.gps_longitude
+        photo_lat = sign_lat*((exif_lat[0]*3600 + exif_lat[1]*60 + exif_lat[2])/3600).to_f
+        photo_lon = sign_lon*((exif_lon[0]*3600 + exif_lon[1]*60 + exif_lon[2])/3600).to_f
+      else
+        lat = lon = nil
+      end
+
+      p.lat = photo_lat
+      p.lon = photo_lon
+      p.exif_at = dt
+      p.created_at = Time.now
+      p.modified_at = Time.now
+    end
+  end
+
+  def image(size)
+    if File.exists?(Potd.fullpath(file_name))
+      img = MiniMagick::Image.open(Potd.fullpath(file_name))
+      if !size.eql?(:full)
+        img.resize(IMG_SIZE[size])
+      end
+      img.to_blob
+    else
+      nil
+    end
+  end
+end
