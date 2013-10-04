@@ -15,7 +15,7 @@ require 'models'
 
 TMP_DIR = BASE_DIR + '/tmp'
 
-CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
+CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config') unless defined?(CONFIG)
 LOGGER = Logger.new(BASE_DIR + '/tmp/potd_import.log')
 LOGGER.level = Logger::DEBUG
 
