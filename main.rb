@@ -21,7 +21,7 @@ CONFIG = ParseConfig.new(BASE_DIR + '/db/dust.config')
 ENV['TZ'] = "Europe/Moscow"
 
 require 'core'
-require 'old_potd'
+require 'weather'
 require 'models'
 require 'prowl'
 
@@ -163,8 +163,7 @@ class Vozduh < Sinatra::Application
     current_potd = Potd.from_file(p)
     return r404 unless current_potd
 
-    new_potd = direction.eql?(:before) ? Potd.where{exif_at > current_potd.exif_at}.order(:exif_at).limit(1).first :
-      Potd.where{exif_at < current_potd.exif_at}.order(Sequel.desc(:exif_at)).limit(1).first
+    new_potd = direction.eql?(:before) ? current_potd.previous : current_potd.next
     return r404 if new_potd.nil?
     to_html ['img', {class: 'rsImg', src: '/potd/medium/' + new_potd.file_name, alt: new_potd.exif_at.strftime('%d.%m.%Y') }]
   end
@@ -193,8 +192,8 @@ class Vozduh < Sinatra::Application
     @span = span
 
     if !@date.nil?
-      @potd = OldPotd.new
-      @potd.find(date, span)
+      @weather = Weather.new @date
+      @potd = Potd.from_date(@date)
     end
 
     response['Access-Control-Allow-Origin'] = 'http://disqus.com'
@@ -274,7 +273,7 @@ class Vozduh < Sinatra::Application
       y = y.to_i
       m = m.to_i
       d = d.to_i
-      Time.mktime(y,m,d)
+      Time.mktime(y,m,d, 12,0,0)
     end
 
     def spell_date(d, span)

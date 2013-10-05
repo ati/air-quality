@@ -59,73 +59,63 @@
     </script>
   <% end %>
 
+  <% 
+    if @span.eql?(:day) && !@potd.nil? 
+      prev_link = (potd_next = @potd.next) ? '<a href="/date/' + potd_next.exif_at.strftime('%Y/%m/%d') + '" style="text-decoration: none;">&#8672;</a>' : '<span style="color: grey">&#8672;</span>'
+      next_link = (potd_prev = @potd.previous) ? '<a href="/date/' + potd_prev.exif_at.strftime('%Y/%m/%d') + '" style="text-decoration: none;">&#8674;</a>' : '<span style="color: grey">&#8674;</span>'
+      year_ago_link = (potd_year_ago = @potd.year_ago) ? '&nbsp; <a href="/date/' + potd_year_ago.exif_at.strftime('%Y/%m/%d') + '">Этот день год назад.</a>' : ''
+    else
+      prev_link = ''
+      next_link = ''
+      year_ago_link = ''
+    end
+  %>
+
     <div class="span10">
-      <h2><%= (spell_date @date, @span).capitalize %></h2>
-      Описание необычайных и замечательных явлений в московской погоде.
-      <br />
-      <br />
-      <% if !@potd.nil? %>
-      <img src="<%= @potd.t_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
-        &nbsp;&nbsp;
-      <img src="<%= @potd.p_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
+      <h2><%= prev_link %> <%= (spell_date @date, @span).capitalize %> <%= next_link %></h2>
+      Ежедневные фотографии московского неба и улиц. <%= year_ago_link %>
       <br />
       <br />
       <div class="row well">
-        <div class="span6">
-          <%= @potd.to_html %>
-          <br />
-          <small>
-            Хотите публиковать здесь свои фотографии воздуха и пыли? <a href="mailto:variomap@gmail.com">Напишите мне письмо</a>, это запросто.
-          </small>
+        <% if !@potd.nil? %>
+        <div class="span9" style="padding-bottom: 20px;">
+          <a href="/potd/full/<%= @potd.file_name %>"><img src="/potd/medium/<%= @potd.file_name %>" border="0" width="786" height="587"/></a>
         </div>
+      <% end %>
 
-        <div class="span3" style="padding-left: 10px;">
+        <div class="span4" style="padding-left: 20px;">
           <div class="row">
             <div id="map_canvas" style="width: 90%; height: 200px;"></div>
           </div>
           <div class="row">
             <br />
             <table class="table">
-              <% if !@potd.created_at.nil? %>
+              <% if @potd && !@potd.exif_at.nil? %>
               <tr>
                 <td><b>Снято:</b></td>
-                <td><%= escape_html @potd.created_at %></td>
+                <td><%= @potd.exif_at.strftime('%Y-%m-%d %H:%M') %></td>
               </tr>
               <% end %>
-              <% if !@potd.description.nil? %>
-              <tr>
-                <td><b>Описание:</b></td>
-                <td><%= escape_html @potd.description %></td>
-              </tr>
-              <% end %>
-              <!-- 
-              <% if !@potd.camera.nil? %>
-              <tr>
-                <td><b>Камера:</b></td>
-                <td><%= escape_html @potd.camera %></td>
-              </tr>
-              <% end %>
-              <% if !@potd.copyright.nil? %>
-              <tr>
-                <td><b>Автор:</b></td>
-                <td><%= escape_html @potd.copyright %></td>
-              </tr>
-              <% end %>
-              -->
             </table>
           </div>
         </div>
-      </div>
-      <% end %>
 
-      <br />
-      <br />
-
-      <div class="row">
-        <div id="disqus_thread"></div>
+        <% if @weather && @weather.t_url && @weather.p_url %>
+        <div class="span5" style="padding-left: 10px;">
+          <img src="<%= @weather.t_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
+          <br />
+          <br />
+          <img src="<%= @weather.p_url.sub(/chs=600x150/, 'chs=350x100') %>" width="350", height="150" />
+        </div>
+        <% end %>
       </div>
     </div>
-  </div>
+    <br />
+    <br />
+
+    <div class="row">
+      <div id="disqus_thread"></div>
+    </div>
 
   <br />
   <br />
@@ -135,16 +125,6 @@
         <h5>Правила раздела "даты"</h5>
         Правила простые: пишите о том, что можно (было) измерить или сфотографировать. Например про радуги, снегопады, ураганы, метеоритные дожди и температурные аномалии. Укажите по возможности и необходимости место, где наблюдалось явление или ссылку на источник, в котором это явление описано.
         <br />
-        <br />
-        Ссылка на хорошую дату бывает любого из трех видов:
-        <br />
-        <ol>
-          <li>/date/YYYY</li>
-          <li>/date/YYYY/MM</li>
-          <li>/date/YYYY/spring|summer|autumn|winter</li>
-          <li>/date/YYYY/MM/DD</li>
-        </ol>
-        На сайте можно набрать любую из этих ссылок и записать свои воспоминания и впечатления об этом времени. 
       </small>
     </div>
 

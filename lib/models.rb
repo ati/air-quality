@@ -351,6 +351,23 @@ class Potd < Sequel::Model
     end
   end
 
+
+  def self.from_date(ts)
+    Potd.where("date(exif_at) = '#{ts.strftime('%Y-%m-%d')}'").all.sample
+  end
+
+  def previous
+    Potd.where("date(exif_at) > date('#{exif_at}')").order(:exif_at).first
+  end
+
+  def next
+    Potd.where("date(exif_at) < date('#{exif_at}')").order(Sequel.desc(:exif_at)).first
+  end
+
+  def year_ago
+    Potd.where("date(exif_at) = date('#{exif_at}') - interval '1 year'").first
+  end
+
   def image(size)
     if File.exists?(Potd.fullpath(file_name))
       img = MiniMagick::Image.open(Potd.fullpath(file_name))
