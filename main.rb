@@ -9,6 +9,7 @@ require 'sinatra/form_helpers'
 require 'rack/csrf'
 require 'logger'
 
+require 'digest'
 require 'date'
 require 'csv'
 require 'json'
@@ -179,12 +180,21 @@ class Vozduh < Sinatra::Application
 
   get '/potd/:size/:img_id' do
     content_type 'image/jpeg'
+	cache_control :public, :max_age => 7*24*3600
 
     if (params[:img_id] =~ /^\w{32}$/) && Potd::IMG_SIZE.keys.include?(params[:size].to_sym)
       potd = Potd.from_file(params[:img_id])
     end
 
-    return potd ? potd.image(params[:size].to_sym) : [404, 'Такой картинки нет']
+	if potd
+	  last_modified potd.modified_at unless potd.nil?
+	  etag Digest::SHA1.hexdigest(params[:img_id] + params[:size]), :weak
+	  img = potd.image(params[:size].to_sym)
+	  response.headers["Content-Length"] = Rack::Utils.bytesize(img).to_s
+	  img
+	else
+      [404, 'Такой картинки нет']
+	end
   end
 
 
