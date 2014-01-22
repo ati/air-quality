@@ -32,31 +32,36 @@ class Prowl < Sequel::Model
     end
   end
 
+  def do_send_nma(nma_event, nma_description)
+	NMA.notify do |n| 
+	  n.apikey = api_key # can also be list such as ["key1", "key2"]
+	  n.priority = NMA::Priority::MODERATE
+	  n.application = APP_NAME
+	  n.event = nma_event
+	  n.description = nma_description
+	end
+  end
 
   def notify(facility, message)
     raise "undefined notifier" if @notifier.is_a?(NilClass)
 	facility_name = { rain: 'Дождь', dust: 'Пыль'}
 
-    begin
       if @notifier.eql?(Prowler)
+		puts("sending Prowler notification")
         Prowler.new(application: APP_NAME, api_key: api_key).notify(facility_name[facility], message)
       else
-        NMA.notify do |n|
-          n.apikey = api_key,
-          n.priority = NMA::Priority::MODERATE
-          n.application = APP_NAME
-          n.event = facility_name[facility]
-          n.description = message
-        end
+		puts("sending NMA notification: api_key=#{api_key}, application=#{APP_NAME}, event=#{facility_name[facility]}, message=#{message}")
+		do_send_nma(facility_name[facility], message)
+#        NMA.notify do |n|
+#          n.apikey = api_key,
+#          n.priority = NMA::Priority::MODERATE
+#          n.application = APP_NAME
+#          n.event = facility_name[facility]
+#          n.description = message
+#        end
       end
-      ts_key = "#{facility}_at".to_s
-      self.update(ts_key => Time.now)
-      return true
-    rescue Exception => e
-      LOGGER.error(e.message)
-      LOGGER.error(e.backtrace.inspect)
-      return false
-    end
+      # ts_key = "#{facility}_at".to_s
+      #self.update(ts_key => Time.now)
   end
 
 

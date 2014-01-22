@@ -171,7 +171,7 @@ class Rain
 
   def duration
     return nil if from.nil?
-    ended_at = to.nil? ? Time.now : to
+    ended_at = to.nil? ? Time.now.utc : to
     return ended_at - from
   end
 
