@@ -42,6 +42,14 @@ class Vozduh < Sinatra::Application
   end
 
 
+  get '/informer' do
+    @current = Dc1100.order(:id).last
+    @d1_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first
+    @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first
+	erb :informer, :layout => :layout_minimal
+  end
+
+
   get '/texts/:article' do
     article_file = [BASE_DIR, 'views', 'texts', params[:article].gsub(/\W/, '') + '.erb'].join(File::SEPARATOR)
     # если есть параметры из редиректа, включить их сюда
