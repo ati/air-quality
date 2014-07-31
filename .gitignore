@@ -4,5 +4,6 @@ source_data/*
 public/potd
 tmp/
 public/img/weekly_filtered.png
+public/img/informer.png
 doc/*
 logs/*

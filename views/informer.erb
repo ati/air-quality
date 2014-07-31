@@ -13,28 +13,26 @@
     end
   %>
 
-<div class="row span7" style="margin-left: 0px; padding: 5px; border: solid silver 1px">
-  <div class="span6" style="margin-left: 5px; margin-top: -5px;">
-	  <div style="font-size: 10pt; font-weight: bold;">Пыль в воздухе Москвы <code style="font-size: 8pt"><%= @current.ts_to_s('%H:%M') %></code></div>
-  <div class="span2">
-	<div class="row" style="font-size: 10pt; padding-bottom: 6px;">Мелк., 2.5 µm</div>
-	<div class="row" style="padding-bottom: 3px;">
-	  <span style="font-size: 16pt; font-weight: bold;"><%= @current.d1 %> <span style="color: silver;"><%= arrows[@d1_stat.direction + 1] %></span></span>
-	</div>
-	<div class="row" style="font-size: 10pt;">n*100/ft³</div>
-	<div class="row">
-	  <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>" style="color: white"><%= labels[@d1_stat.level(@current.d1)] %></span>
+<table cellpadding="2">
+	<tr>
+		  <td colspan="2" style="font-size: 10pt; font-weight: bold;">Пыль в воздухе Москвы <code style="font-size: 8pt"><%= @current.ts_to_s('%H:%M') %></code></td>
+	  </tr>
+	<tr>
+		<td class="row" style="font-size: 10pt;">Мелк., 2.5 µm</td>
+		<td class="row" style="font-size: 10pt;">Крупн. 10 µm</td>
+	</tr>
+	<tr>
+	  <td style="font-size: 16pt; font-weight: bold;"><%= @current.d1 %> <span style="color: silver;"><%= arrows[@d1_stat.direction + 1] %></span></td>
+	  <td style="font-size: 16pt; font-weight: bold;"><%= @current.d2 %> <span style="color: silver;"><%= arrows[@d2_stat.direction + 1] %></span></td>
+	</tr>
+
+	<tr>
+	  <td class="row" style="font-size: 10pt;">n*100/ft³</td>
+	  <td class="row" style="font-size: 10pt;">n*100/ft³</td>
+    </tr>
+
+	<tr>
+		<td> <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>" style="color: white"><%= labels[@d1_stat.level(@current.d1)] %></span></td>
 	  
-	</div>
-  </div>
-  <div class="span2" style="margin-left: -32px;">
-	<div class="row" style="font-size: 10pt; padding-bottom: 6px;">Крупн. 10 µm</div>
-	<div class="row" style="padding-bottom: 3px;">
-		<span style="font-size: 16pt; font-weight: bold;"><%= @current.d2 %> <span style="color: silver;"><%= arrows[@d2_stat.direction + 1] %></span></span>
-	</div>
-	<div class="row" style="font-size: 10pt;">n*100/ft³</div>
-	<div class="row">
-	  <span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>" style="color: white"><%= labels[@d2_stat.level(@current.d2)] %></span>
-  	</div>
-  </div>
-</div>
+		<td><span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>" style="color: white"><%= labels[@d2_stat.level(@current.d2)] %></span></td>
+</table>
