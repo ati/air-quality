@@ -40,8 +40,8 @@ update_roll <- function()
   dust_rollmed = rollmedian(dust_ts, 3001, fill=c("extend", "extend", "extend"))
   # rain_rollsum = rollapply(rain_ts, 5, sum, fill=c("extend", "extend", "extend"))
 
-  save_roll(MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed))
-  save_roll(SUM_RAIN_TABLE, as.data.frame(rain_ts))
+  suppressWarnings(save_roll(MEDIAN_DUST_TABLE, as.data.frame(dust_rollmed)))
+  suppressWarnings(save_roll(SUM_RAIN_TABLE, as.data.frame(rain_ts)))
 }
 
 save_roll <- function(table_name, dataset)
@@ -70,7 +70,7 @@ plot_rollmedian <- function()
 }
 
 if ("update" %in% args)
-  update_roll()
+  suppressMessages(update_roll())
 
 if ("plot" %in% args)
   plot_rollmedian()
