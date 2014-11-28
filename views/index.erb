@@ -1,19 +1,326 @@
-<html>
-    <head>
-        <title></title>
-        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
-    </head>
-    <body>
-        <form name="mf">
+<div id="fb-root"></div>
+<% content_for :title do %>
+  текущая ситуация и прогноз.
+<% end %>
 
-        <div id="graphdiv"></div>
-        <script type="text/javascript">
-            g = new Dygraph(
-                document.getElementById('graphdiv'),
-                '/data/6/2012/1',
-                {}
-            );
-        </script>
-        </form>
-    </body>
-</html>
+<% content_for :stylesheets do %>
+  <link rel="stylesheet" href="/royalslider/royalslider.css">
+  <link rel="stylesheet" href="/royalslider/skins/default/rs-default.css"> 
+  <style type="text/css">
+    .royalSlider,
+    .royalSlider .rsOverflow,
+    .royalSlider .rsSlide,
+    .royalSlider .rsVideoFrameHolder,
+    .royalSlider .rsThumbs {
+        background: none !important;
+    }
+    .rsGCaption {
+      position: absolute;
+      top: 50%;
+      height: 1.7em;
+    }
+  </style>
+<% end %>
+
+<% content_for :scripts do %>
+  <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+  <script type="text/javascript" src="/royalslider/jquery.royalslider.custom.min.js"></script>
+  <script type="text/javascript">
+
+    var current_ts = <%= Time.now.to_i %>;
+
+    function data_url()
+    {
+      var data_url = '/data/dust.csv?ts=' + current_ts;
+      return data_url;
+    }
+
+    function rain_color(rain_size)
+    {
+      rain_colors = ["#FFFFFF", "#FCFAEE", "#F5EFD4", "#EEE4BA", "#E8DAA1"];
+      if (rain_size < 1)
+        return rain_colors[0];
+      else if (rain_size < 4)
+        return rain_colors[1];
+      else if (rain_size < 8)
+        return rain_colors[2];
+      else 
+        return rain_colors[3];
+      end
+    }
+
+
+    jQuery(document).ready(function($) {
+        var current_slider_id = 0;
+
+        var slider = $(".royalSlider").royalSlider({
+          keyboardNavEnabled: true,
+          imageScaleMode: 'fill',
+          controlNavigation: 'none',
+          keyboardNavEnabled: true,
+          navigateByClick: false,
+          globalCaption: true,
+          slidesOrientation: 'vertical',
+          visibleNearby: {
+              enabled: true,
+              centerArea: 0.7,
+              center: true,
+              navigateByCenterClick: false,
+          },
+          }).data('royalSlider');
+
+        slider.ev.on('rsAfterSlideChange', function(event) {
+          var too_short_above = 2;
+          var too_short_below = 3;
+          var optimum_slides_count = 15;
+
+
+          if (current_slider_id < this.currSlideId) // едем вниз
+          {
+            if (this.slides.length - this.currSlideId < too_short_below)
+            {
+              var names = this.slides[this.slides.length - 1].image.split('/').reverse();
+              $.get('/potd/after/' + names[0], function(data) {
+                slider.appendSlide(data);
+              });
+              if (this.slides.length > optimum_slides_count)
+              {
+                // can't remove from top, looks awfull
+                // this.removeSlide(0);
+              }
+            }
+          }
+          else // едем вверх
+          {
+            if (this.currSlideId < too_short_above)
+            {
+              var names = this.slides[0].image.split('/').reverse();
+              $.get('/potd/before/' + names[0], function(data) {
+                slider.appendSlide(data, 0);
+              });
+              if (this.slides.length > optimum_slides_count)
+              {
+                this.removeSlide(this.slides.length - 1);
+              }
+            }
+          }
+
+          current_slider_id = this.currSlideId;
+        });
+
+        slider.ev.on('rsSlideClick', function() {
+          // open calendar pages
+          window.location.href = '/date/' + this.currSlide.caption
+        });
+
+        var graph = new Dygraph(
+            document.getElementById('graph'),
+            data_url(),
+            {
+                animatedZooms: true,
+                legend: 'always',
+                labelsDiv: 'graph_labels',
+                labelsDivWidth: 400,
+                hideOverlayOnMouseOut: false,
+                gridLineColor: 'rgb(223,223,223)',
+                rollPeriod: 3,
+                logscale: true,
+                clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
+                axisLabelFontSize: 13,
+                labelsSeparateLines: true,
+                connectSeparatedPoints: false,
+                customBars: true,
+                underlayCallback: function(canvas, area, g) // plot rains as vertical color stripes
+                {
+                  rains = <%= @rains.map{|r| {from: (r.from.to_i + 4*3600)*1000, to: (r.to.to_i + 4*3600)*1000, size: r.size}}.to_json %>;
+                  var min_data_x = g.getValue(0,0);
+                  var max_data_x = g.getValue(g.numRows()-1,0);
+
+                  $.each(rains, function(index, rain)
+                  {
+                    canvas.fillStyle = rain_color(rain.size);
+                    var canvas_left_x = g.toDomXCoord(rain.from);
+                    var canvas_width = g.toDomXCoord(rain.to) - canvas_left_x;
+                    // alert('from: ' + rain.from + ', max_data_x: ' + max_data_x);
+
+                    if ((rain.to > min_data_x) && (rain.from < max_data_x))
+                    {
+                      canvas.fillRect(canvas_left_x, area.y, canvas_width, area.h);
+                    }
+                  });
+                },
+            }
+        );
+        $('#f2013').animate({scrollLeft: 2500 - 780}, 2000, 'swing', function() {
+            $('#f2014').animate({scrollLeft: 2500 - 780}, 2000);
+        });
+    });
+  </script>
+<% end %>
+
+  <%
+    labels = ['отлично','хорошо','нормально','плохо','очень плохо']
+    arrows = ['⤵', '&#x2192;', '⤴']
+    dc1100_values = [0, 75, 300, 1050, 3000]
+    quant_values = [0]
+    (0..3).each do |i|
+      quant_values << @d1_stat.quant(i)
+    end
+  %>
+
+  <div class="row">
+    <span class="span9">
+      <div class="alert alert-info">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+		<strong>2014-11-25</strong> Добавлены годичные сглаженные графики пыли.
+      </div>
+    </span>
+  </div>
+
+  <div class="row">
+    <div class="span12 offset1">
+      <h4>Текущая ситуация:</h4><br />
+      <div class="span2">
+        <div class="row">
+          <small>Пыль &lt; 2.5 µm</small>
+        </div>
+        <div class="row">
+          <h2><%= @current.d1 %> <span style="color: silver;"><%= arrows[@d1_stat.direction + 1] %></span></h2>
+        </div>
+        <div class="row">
+          <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>"><a href="#how_many_is_many" style="color: white;"><%= labels[@d1_stat.level(@current.d1)] %></a></span>
+          <br />
+          <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
+        </div>
+      </div>
+      <div class="span2">
+        <div class="row">
+          <small>Пыль &gt; 2.5 µm</small>
+        </div>
+        <div class="row">
+          <h2><%= @current.d2 %> <span style="color: silver;"><%= arrows[@d2_stat.direction + 1] %></span></h2>
+        </div>
+        <div class="row">
+          <span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>"><a href="#how_many_is_many" style="color: white;"><%= labels[@d2_stat.level(@current.d2)] %></a></span>
+          <br />
+          <small>n*100/ft³ <code><%= @current.ts_to_s('%H:%M') %></code></small>
+        </div>
+      </div>
+      <% if ! @rain.from.nil? %>
+      <div class="span2">
+        <div class="row">
+          <small>Последний дождь</small>
+        </div>
+        <div class="row">
+          <h2><%= "%.2f" % @rain.mm %></h2>
+        </div>
+        <div class="row">
+        <small>мм<% if ! @rain.to.nil? %>, <span class="alert">идёт сейчас</span><% end %>
+            <br />
+            <code><%= @rain.from.strftime('%Y-%m-%d') + '/' + @rain.duration.to_i.duration %></code>
+          </small>
+        </div>
+      </div>
+      <% end %>
+  </div>
+
+  <!-- graph -->
+  <div class="row">
+    <div class="span3 offset1"><br /><br /><h4>Пыль и дождь:</h4><br /></div>
+    <div class="span9" id="graph" style="width: 80%"></div>
+  </div>
+  <br />
+  <div class="row">
+    <div class="span3 offset1" id="graph_labels"></div>
+    <div class="span6">
+      <small>
+        Пыль изменяется в штуках пылинок в 0.01 кубического <b>фута</b> воздуха (примерно в одном вдохе). Вертикальные желтые полоски - дожди.
+      </small>
+    </div>
+  </div>
+  <br />
+
+  <div class="row">
+    <div class="span9 offset1">
+      <h4 style="padding-top: 30px;">Зачем это нужно, что даёт измерение пыли?</h4>
+      <p>
+Пока это информация к размышлению, материал наблюдений. Нам нужно гораздо больше узнать о составе и циклических изменениях городского воздуха, чтобы начать делать практические выводы, полезные для жизни людей. Однако ряд выводов можно сделать уже по результатам двухлетних наблюдений:
+        <ol>
+          <li>Как правило, с периодом 7-10 дней содержание пыли меняется в 1.5 - 3 раза. Связано это с промышленными факторами или с погодными, пока неизвестно.</li>
+          <li>Существует годовой цикл изменений: с мая по август как среднее значение, так и амплитуда колебаний гораздо меньше, чем в холодный период (с сентября по апрель).</li>
+        </ol>
+      </p>
+      <p>
+      <br />
+      <h4>Данные за 2013- 2014 год</h4>
+      <div class="span9" id="f2014" style="overflow: scroll; border: 1px solid silver; height: 200px; margin-bottom: 30px; margin-left: 0">
+        <img src="/img/filtered-2013-2014.png" style="min-width: 2500px; min-height: 100%" />
+      </div>
+      <br />
+      <h4>Данные за 2012 - 2013 год</h4>
+      <div class="span9" id="f2013" style="overflow: scroll; border: 1px solid silver; height: 200px; margin-bottom: 30px; margin-left: 0">
+        <img src="/img/filtered-2012-2013.png" style="min-width: 2500px; min-height: 100%" />
+      </div>
+      </p>
+      <img src="/img/weekly_filtered.png" width="786" height="214" alt="воздух москвы за последние недели"/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="span9 offset1">
+      <h4 style="padding-top: 30px;">Как выглядел воздух сейчас и в прошлом?</h4>
+      <div class="royalSlider rsDefault" style="min-height: 587px; width: 786px;">
+
+        <% @potds.each do |potd| %>
+          <img class="rsImg" src="/potd/medium/<%= potd.file_name %>" alt="<%= potd.exif_at.strftime('%d.%m.%Y') %>" />
+        <% end %>
+
+      </div>
+    </div>
+  </div>
+  
+
+  <br />
+  <br />
+  <a name="how_many_is_many"></a>
+  <div class="row">
+    <div class="span9 offset1">
+      <p>
+      Что значит <span class="badge badge-important">много пыли</span> или <span class="badge badge-warning">нормально</span>? Много по сравнению с чем? Есть два способа ответить на этот вопрос. Во-первых на него дает ответ производитель прибора, измеряющего пыль. Например, он определённо считает, что состояние воздуха, соответствующее величинам от 1050 до 3000 характеризуется словом "плохое". С другой стороны, мы можем исходить из того, что у нас бывает <em>обычно</em>, т.е. из истории наблюдений. 75 раз из 100 померяв в Москве уровень пыли мы увидим значение больше 1000. Поэтому сейчас количество пыли от <%= quant_values[2] %> до <%= quant_values[3] %> мы считаем <em>нормальным</em>, именно потому, что в половине измерений мы увидим уровень существенно выше. Мы оцениваем уровень загрязнения и присваиваем цветные таблички под цифрами наверху вторым способом.
+      </p>
+      
+      <p>
+      <br />
+      <br />
+        Если свести эти цифры воедино, то получится следующее (строка, соответствующая текущему уровню, подсвечена зеленым):
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Качество воздуха</th>
+              <th>По паспорту прибора</th>
+              <th>По опыту измерений</th>
+            </tr>
+          </thead>
+          <tbody>
+          <% (0..3).each do |i| %>
+            <tr<%= @current.d1.between?(quant_values[i], quant_values[i+1])? ' class="success"' : '' %>>
+              <td><span class="badge badge-<%= @d1_stat.level(quant_values[i+1]).level_class %>"><%= labels[i] %></span></td>
+              <td><%= dc1100_values[i] %>-<%= dc1100_values[i+1] %></td>
+              <td><%= quant_values[i] %>-<%= quant_values[i+1] %></td>
+            </tr>
+          <% end %>
+            <tr<%= (@current.d1 > quant_values.last)? ' class="success"' : '' %>>
+              <td><span class="badge badge-inverse">очень плохо</span></td>
+              <td><%= dc1100_values.last %>+</td>
+              <td><%= quant_values.last %>+</td>
+            </tr>
+          </tbody>
+        </table>
+      </p>
+
+	  <br />
+	  <a target=_blank href=http://pogoda.ru><img width=88 height=31
+		  border=0 src=http://pogoda.ru/images/pogoda88x31.gif alt="Погода.Ru -
+		  прогноз погоды" title="Сайт зарегистрирован в каталоге Погода.Ru"></a>
+    </div>
+  </div>

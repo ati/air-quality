@@ -1,0 +1,74 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    backports (3.3.4)
+    exifr (1.1.3)
+    gmail (0.4.0)
+      gmail_xoauth (>= 0.3.0)
+      mail (>= 2.2.1)
+      mime (>= 0.1)
+    gmail_xoauth (0.4.1)
+      oauth (>= 0.3.6)
+    mail (2.5.4)
+      mime-types (~> 1.16)
+      treetop (~> 1.4.8)
+    mime (0.1)
+    mime-types (1.25)
+    mini_magick (3.6.0)
+      subexec (~> 0.2.1)
+    multi_json (1.8.0)
+    oauth (0.4.7)
+    parseconfig (1.0.2)
+    pg (0.17.0)
+    polyglot (0.3.3)
+    prowler (1.3.1)
+    rack (1.5.2)
+    rack-protection (1.5.0)
+      rack
+    rack-test (0.6.2)
+      rack (>= 1.0)
+    rack_csrf (2.4.0)
+      rack (>= 0.9)
+    ruby-notify-my-android (0.4.3)
+      xml-simple (>= 1.0.15)
+    sequel (4.2.0)
+    sinatra (1.4.3)
+      rack (~> 1.4)
+      rack-protection (~> 1.4)
+      tilt (~> 1.3, >= 1.3.4)
+    sinatra-content-for2 (0.3)
+      sinatra
+    sinatra-contrib (1.4.1)
+      backports (>= 2.0)
+      multi_json
+      rack-protection
+      rack-test
+      sinatra (~> 1.4.0)
+      tilt (~> 1.3)
+    sinatra-formhelpers (0.4.0)
+    sinatra-reloader (1.0)
+      sinatra-contrib
+    subexec (0.2.3)
+    tilt (1.4.1)
+    treetop (1.4.15)
+      polyglot
+      polyglot (>= 0.3.1)
+    xml-simple (1.1.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  exifr
+  gmail
+  mini_magick
+  parseconfig
+  pg
+  prowler
+  rack_csrf
+  ruby-notify-my-android
+  sequel
+  sinatra
+  sinatra-content-for2
+  sinatra-formhelpers
+  sinatra-reloader

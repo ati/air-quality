@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Московский воздух: <%= yield_content(:title) %></title>
+        <link href="/bootstrap/css/bootstrap.css" rel="stylesheet" />
+        <link href="/bootstrap/css/bootstrap-responsive.css" rel="stylesheet" />
+        <%= yield_content :stylesheets %>
+        <script type="text/javascript" src="/js/jquery-1.8.3.min.js"></script>
+        <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="http://vk.com/js/api/share.js?11" charset="windows-1251"></script>
+        <%= yield_content :scripts %>
+
+		<script type="text/javascript">
+
+		  var _gaq = _gaq || [];
+		  _gaq.push(['_setAccount', 'UA-34430453-1']);
+		  _gaq.push(['_trackPageview']);
+
+      // google analytics
+		  (function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  })();
+
+      // facebook
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=375739648233";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+		</script>
+    </head>
+    <body>
+        <header>
+          <%
+            current_date = Time.now
+
+            def active_class(path)
+              request.path_info.start_with?(path)? ' class="active"' : ''
+            end
+          %>
+          <div class="navbar">
+            <div class="navbar-inner">
+              <a class="brand" href="/"><i class="icon-th"></i> Московский воздух</a>
+              <ul class="nav">
+                <li class="divider-vertical"></li>
+                <li><a href="/texts/links">Ссылки</a></li>
+                <li class="divider-vertical"></li>
+                  <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                      Дневник
+                      <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                      <li><a href="/date/<%= current_date.strftime('%Y/%m/%d') %>">Сегодня, <%= spell_date current_date, :day %></a></li>
+                      <li><a href="/date/<%= current_date.strftime('%Y/%m') %>"><%= spell_date current_date, :month %></a></li>
+                      <li><a href="/date/<%= [current_date.year, current_date.season].join('/') %>"><%= spell_date current_date, :season %></a></li>
+                      <li><a href="/date/<%= current_date.year %>"><%= spell_date current_date, :year %></a></li>
+                    </ul>
+                  </li>
+                  <li class="divider-vertical"></li>
+              </ul>
+              <ul class="nav pull-right">
+                <li<%= active_class('/methodology') %>><a href="/methodology">Что и как измеряется</a></li>
+                <li class="divider-vertical"></li>
+                <li<%= active_class('/contacts') %>><a href="/contacts">Контакты</a></li>
+              </ul>
+            </div>
+          </div>
+          </header>
+  
+        <div class="container">
+        <%= yield %>
+        <!-- footer -->
+        </div>
+        <footer>
+          <br />
+          <br />
+          <hr/>
+          <div class="row">
+            <div class="span9 offset2">
+              <table border="0" cellpadding="20"><tr valign="top"><td>
+                <script type="text/javascript"><!--
+                  document.write(VK.Share.button(false,{type: "round", text: "Share"}));
+                --></script>
+              </td>
+              <td>
+                <div class="fb-like" data-href="http://vozduh.msk.ru/" data-send="true" data-width="450" data-show-faces="true"></div>
+              </td></tr></table>
+            </div>
+          <div>
+        </footer>
+    </body>
+</html>

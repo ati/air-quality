@@ -1,0 +1,38 @@
+<div id="fb-root"></div>
+<% content_for :title do %>
+  текущая ситуация и прогноз.
+<% end %>
+
+  <%
+    labels = ['отлично','хорошо','нормально','плохо','очень плохо']
+    arrows = ['⤵', '&#x2192;', '⤴']
+    dc1100_values = [0, 75, 300, 1050, 3000]
+    quant_values = [0]
+    (0..3).each do |i|
+      quant_values << @d1_stat.quant(i)
+    end
+  %>
+
+<table cellpadding="2">
+	<tr>
+		  <td colspan="2" style="font-size: 10pt; font-weight: bold;">Пыль в воздухе Москвы <code style="font-size: 8pt"><%= @current.ts_to_s('%H:%M') %></code></td>
+	  </tr>
+	<tr>
+		<td class="row" style="font-size: 10pt;">Мелк., 2.5 µm</td>
+		<td class="row" style="font-size: 10pt;">Крупн. 10 µm</td>
+	</tr>
+	<tr>
+	  <td style="font-size: 16pt; font-weight: bold;"><%= @current.d1 %> <span style="color: silver;"><%= arrows[@d1_stat.direction + 1] %></span></td>
+	  <td style="font-size: 16pt; font-weight: bold;"><%= @current.d2 %> <span style="color: silver;"><%= arrows[@d2_stat.direction + 1] %></span></td>
+	</tr>
+
+	<tr>
+	  <td class="row" style="font-size: 10pt;">n*100/ft³</td>
+	  <td class="row" style="font-size: 10pt;">n*100/ft³</td>
+    </tr>
+
+	<tr>
+		<td> <span class="badge badge-<%= @d1_stat.level(@current.d1).level_class %>" style="color: white"><%= labels[@d1_stat.level(@current.d1)] %></span></td>
+	  
+		<td><span class="badge badge-<%= @d2_stat.level(@current.d2).level_class %>" style="color: white"><%= labels[@d2_stat.level(@current.d2)] %></span></td>
+</table>

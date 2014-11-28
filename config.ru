@@ -1,4 +1,4 @@
 require 'rubygems'
 require 'sinatra'
-require 'publish_graphs'
-run Sinatra::Application
+require File.dirname(__FILE__) + '/main'
+run Vozduh

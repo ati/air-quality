@@ -1,3 +1,9 @@
 db/*
 source_data/*
 .DS_Store
+public/potd
+tmp/
+public/img/weekly_filtered.png
+public/img/informer.png
+doc/*
+logs/*
