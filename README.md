@@ -10,3 +10,6 @@ This is a code, that powers [Vozduh (russian for "air")](http://vozduh.msk.ru/) 
 
 Deploy: git push production master
 Start: unicorn -c /home/ati/air-quality/unicorn.rb -E production -D
+
+starting dust daemon (in screen)
+while date; do ruby ./dust_daemon.rb | tee -a dust_daemon-$((date +%Y-%m-%d)).log; sleep 5; done

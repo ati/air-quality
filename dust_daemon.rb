@@ -27,6 +27,7 @@ end
 
 
 def send_data(dc1100_string)
+    #puts "sending data to tautology"
     uri = URI(@config['data_url'])
     req = Net::HTTP::Post.new(uri.path)
     req.set_form_data('measured_at' => Time.now.to_i, 'data' => dc1100_string)
@@ -38,6 +39,7 @@ end
 
 #https://cosm.com/docs/quickstart/curl.html
 def publish_cosm(dc1100_string)
+    #puts "publishing data on pachube"
     uri = URI(@config['cosm_url'])
     req = Net::HTTP::Put.new(uri.path)
     req['X-ApiKey'] = @config['cosm_key']
@@ -50,7 +52,7 @@ def publish_cosm(dc1100_string)
             {"id" => "rain", "current_value"  => data['rc']},
         ]
     }.to_json
-    puts req.inspect
+    #puts req.inspect
 
     make_request(uri,req)
 end
@@ -59,12 +61,13 @@ end
 #{"d1":5989,"d2":136,"t1":25,"h1":58,"rc":1,"pc":96,"ts":194250,"hs":0}
 def main_loop
     SerialPort.open(@config['xbee_device'], XBEE_PORT_PARAMS) { |sp|
-        while sensors = sp.gets.strip
-            send_data(sensors)
-            publish_cosm(sensors)
+        while sensors = sp.gets
+            send_data(sensors.strip)
+            #publish_cosm(sensors.strip)
             puts "#{Time.now.to_s}: #{sensors}"
         end
     }
+    warn "error opening #{@config['xbee_device']}"
 end
 
 main_loop
