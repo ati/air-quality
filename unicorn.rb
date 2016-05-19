@@ -1,4 +1,4 @@
-@dir = File.dirname(__FILE__)
+@dir = File.expand_path(File.dirname(__FILE__))
 worker_processes 2
 working_directory @dir
 
