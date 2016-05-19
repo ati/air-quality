@@ -35,7 +35,7 @@ class Vozduh < Sinatra::Application
       @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first
       @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
       @rain = Rain.from_s(@rain_stat.quantiles)
-      @rains = Rainsum.where("row_names > '" + (Time.now - 2.days).utc.to_s + "'").rains
+      @rains = Rainsum.where("row_names > '" + (Time.now - 3.days).utc.to_s + "'").rains
       @potds = Potd.exclude(exif_at: nil).order(Sequel.desc(:exif_at)).limit(4)
 
       erb :index
@@ -89,9 +89,11 @@ class Vozduh < Sinatra::Application
 
 
   get '/data/dust.csv' do
+    ts = params['ts']
+    return [404, 'not found']  unless ts && ts =~/^\d{10}$/
+    to = ts.to_i #Time.now.utc.to_i
 
-    to = Time.now.utc.to_i
-    from = to - 2.days
+    from = to - 3.days
 
     air = Dc1100.deviations_range(from, to)
 
@@ -264,8 +266,6 @@ class Vozduh < Sinatra::Application
     
     if development?
       $logger.level = Logger::DEBUG
-      register Sinatra::Reloader
-      also_reload BASE_DIR + '/lib/models.rb'
     else
       $logger.level = Logger::WARN
     end
