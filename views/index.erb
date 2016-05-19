@@ -28,11 +28,11 @@
   <script type="text/javascript">
 
     var current_ts = <%= Time.now.to_i %>;
+    var last_ts = 0;
 
-    function data_url()
+    function data_url(ts)
     {
-      var data_url = '/data/dust.csv?ts=' + current_ts;
-      return data_url;
+      return '/data/dust.csv?ts=' + ts;
     }
 
     function rain_color(rain_size)
@@ -49,6 +49,18 @@
       end
     }
 
+
+    var panTimeout = null;
+
+    function pan(dygraph, is_initial) {
+      var new_ts = Math.round(dygraph.xAxisRange()[1]/1000.0);
+
+      if (!is_initial && (Math.abs(new_ts - last_ts) > 3600)) { // don't update for micro-pans
+        last_ts = new_ts;
+        dygraph.updateOptions({file: data_url(new_ts)});
+        console.log("Updated to " + Date(new_ts*1000));
+      }
+    }
 
     jQuery(document).ready(function($) {
         var current_slider_id = 0;
@@ -115,7 +127,7 @@
 
         var graph = new Dygraph(
             document.getElementById('graph'),
-            data_url(),
+            data_url(current_ts),
             {
                 animatedZooms: true,
                 legend: 'always',
@@ -126,6 +138,12 @@
                 rollPeriod: 3,
                 logscale: true,
                 clickCallback: function(a,b,c) {graph.updateOptions({logscale: !graph.getOption('logscale')})},
+                drawCallback: function(dygraph, is_initial) { // update graphs on pan event. TODO: update rains
+                  if (panTimeout) {
+                    clearTimeout(panTimeout);
+                  }
+                  panTimeout = setTimeout(pan, 300, dygraph, is_initial);
+                },
                 axisLabelFontSize: 13,
                 labelsSeparateLines: true,
                 connectSeparatedPoints: false,
@@ -172,9 +190,12 @@
     <span class="span9">
       <div class="alert alert-info">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
+		    <strong>2015-10-30</strong> Добавлена возможность смотреть историю измерений. Мышкой - shift-drag на основном графике. 
+    		<br />
+		    <strong>2015-07-31</strong> Исправлена поломка блока питания. Из-за неё устройство не работало с 17 по 31 июля 2015 г.
+    		<br />
         <strong>2014-11-29</strong> добавлена <a href="/img/2013-2014-pollution-rose-uuee.png">pollution rose</a> для Московского региона
         <br />
-		    <strong>2014-11-25</strong> Добавлены годичные сглаженные графики пыли.
       </div>
     </span>
   </div>
