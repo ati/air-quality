@@ -9,7 +9,7 @@ gem 'parseconfig'
 
 gem 'sequel'
 #gem 'sqlite3'
-gem 'pg'
+#gem 'pg'
 
 # чтение информации из картинок в "галерее"
 gem 'exifr'
