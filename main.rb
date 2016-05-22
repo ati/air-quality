@@ -30,13 +30,13 @@ class Vozduh < Sinatra::Application
   helpers Sinatra::FormHelpers
 
   get '/' do
-      @current = Dc1100.order(:id).last
-      @d1_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first
-      @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first
-      @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first
-      @rain = Rain.from_s(@rain_stat.quantiles)
-      @rains = Rainsum.where("row_names > '" + (Time.now - 3.days).utc.to_s + "'").rains
-      @potds = Potd.exclude(exif_at: nil).order(Sequel.desc(:exif_at)).limit(4)
+      @current = Dc1100.order(:id).last || Dc1100.new
+      @d1_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM25_SENSOR).first || Dc1100s_stat.new
+      @d2_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::PM10_SENSOR).first || Dc1100s_stat.new
+      @rain_stat = Dc1100s_stat.where(n_sensor: Dc1100s_stat::RAIN_SENSOR).first || Dc1100s_stat.new
+      @rain = Rain.from_s(@rain_stat.quantiles) || Rain.new
+      @rains = Rainsum.where("row_names > '" + (Time.now - 3.days).utc.to_s + "'").rains || Rainsum.new
+      @potds = Potd.exclude(exif_at: nil).order(Sequel.desc(:exif_at)).limit(4) || Potd.new
 
       erb :index
   end

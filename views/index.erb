@@ -326,13 +326,13 @@
           </thead>
           <tbody>
           <% (0..3).each do |i| %>
-            <tr<%= @current.d1.between?(quant_values[i], quant_values[i+1])? ' class="success"' : '' %>>
+            <tr<%= @current.d1.to_i.between?(quant_values[i], quant_values[i+1])? ' class="success"' : '' %>>
               <td><span class="badge badge-<%= @d1_stat.level(quant_values[i+1]).level_class %>"><%= labels[i] %></span></td>
               <td><%= dc1100_values[i] %>-<%= dc1100_values[i+1] %></td>
               <td><%= quant_values[i] %>-<%= quant_values[i+1] %></td>
             </tr>
           <% end %>
-            <tr<%= (@current.d1 > quant_values.last)? ' class="success"' : '' %>>
+            <tr<%= (@current.d1.to_i > quant_values.last)? ' class="success"' : '' %>>
               <td><span class="badge badge-inverse">очень плохо</span></td>
               <td><%= dc1100_values.last %>+</td>
               <td><%= quant_values.last %>+</td>

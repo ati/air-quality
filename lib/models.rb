@@ -65,7 +65,11 @@ class Dc1100 < Sequel::Model
     AVG_INTERVAL = 30*60
 
     def ts_to_s( format = '%Y-%m-%d %H:%M')
+      if measured_at
         Time.at(measured_at).strftime(format)
+      else
+        '0000-00-00 00:00'
+      end
     end
 
     def self.timerange(from, to)
@@ -106,11 +110,19 @@ class Dc1100s_stat < Sequel::Model
   RAIN_SENSOR = 3
 
   def quant(i)
-    (quantiles.split(',').map{|x| x.to_i})[i]
+    if quantiles
+      (quantiles.split(',').map{|x| x.to_i})[i]
+    else
+      return 0
+    end
   end
 
 
   def level(n)
+    if !quantiles
+      return 0
+    end
+
     qs = quantiles.split(',').map{|x| x.to_i}
 
     if n.between?(0, qs[0])
@@ -128,8 +140,10 @@ class Dc1100s_stat < Sequel::Model
 
 
   def direction
-    return 0 if trend.between?(-1,1)
-    return 1 if trend > 0
+    if trend
+      return 0 if trend.between?(-1,1)
+      return 1 if trend > 0
+    end
     return -1
   end
 
@@ -201,12 +215,14 @@ class Rain
 
   def self.from_s(s)
     r = Rain.new
-    fields = eval(s)
-    from = fields[:from]
-    to = fields[:to]
-    r.from = (from.nil? || from.empty?) ? nil : Time.parse(from)
-    r.to = (to.nil? || to.empty?) ? nil : Time.parse(to)
-    r.size = fields[:size].nil? ? nil : fields[:size].to_i
+    if (s)
+      fields = eval(s)
+      from = fields[:from]
+      to = fields[:to]
+      r.from = (from.nil? || from.empty?) ? nil : Time.parse(from)
+      r.to = (to.nil? || to.empty?) ? nil : Time.parse(to)
+      r.size = fields[:size].nil? ? nil : fields[:size].to_i
+    end
     return r
   end
 
